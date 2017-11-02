@@ -1,0 +1,40 @@
+<link rel="import" href="../../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<dom-module id="single-model">
+    <template>
+        <style>
+            :host {
+                margin: 0px;
+            }
+        </style>
+        <style include="iron-flex iron-flex-alignment"></style>
+
+        <div class="layout horizontal">
+            <div><paper-icon-button icon="arrow-back" on-tap="_back"></paper-icon-button></div>
+            <div><span>{{model}}</h1></span>
+        </div>
+
+    </template>
+
+    <script>
+
+    Polymer({
+      is: 'single-model',
+       properties : {
+          back :{
+              type:Boolean,
+              notify:true
+          }
+      },    
+      _back : function(){
+          this.back =true;
+      }
+    });
+    
+    </script>
+
+</dom-module>

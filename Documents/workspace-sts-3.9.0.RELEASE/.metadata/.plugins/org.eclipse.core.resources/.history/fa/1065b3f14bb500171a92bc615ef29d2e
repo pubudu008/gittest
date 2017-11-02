@@ -1,0 +1,25 @@
+package com.example.demo.service;
+
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@Slf4j
+public class ModelService {
+	
+	@Value("${spring.data.rest.base-path}")
+	private String basePath;
+
+	private @Inject RepositoryRestMvcConfiguration configuration;
+
+	private static HashMap<String, Model> modelsMap;
+	private static HashMap<String, ArrayList<ProjectionDto>> projectionsMap;
+
+	public void searchIn(String pakageName) {
+		getAllProjections(pakageName);
+		getModels();
+	}// End searchAllEntites()
+
+
+}

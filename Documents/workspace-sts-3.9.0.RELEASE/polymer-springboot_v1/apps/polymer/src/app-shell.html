@@ -1,0 +1,91 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="login-page.html">
+<link rel="import" href="main-container.html">
+
+<link rel="import" href="my-icons.html">
+
+<dom-module id="app-shell">
+
+  <template>
+
+    <style>
+      :host {
+        display: flex;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        --app-primary-color: #ff8800;
+        --app-background:#e9e9e9;
+        --app-text-color:#000;
+        --app-accent-color: #1E88E5;
+        --app-secondary-color: black;
+      }
+      
+      neon-animated-pages {
+        flex: 1;
+      }
+    </style>
+
+    <neon-animated-pages selected="{{selected}}" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+      <login-page token="{{token}}"></login-page>
+      <main-contailer token="{{token}}"></main-contailer>
+    </neon-animated-pages>
+
+    <iron-localstorage name="token" value="{{token}}"></iron-localstorage>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'app-shell',
+
+      properties: {
+        token: {
+          type: String,
+          notify: true,
+          value: ''
+        },
+        selected: {
+          type: Number,
+          notify: true,
+          computed: '_selectPage(token)'
+        }
+      },
+
+      listeners: {
+        'logout': '_logout'
+      },
+
+      _selectPage: function(token) {
+        return token ? 1 : 0;
+      },
+
+      _logout: function() {
+        // invalidate token to server
+        this.token = '';
+      }
+
+    });
+
+  </script>
+
+</dom-module>

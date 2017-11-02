@@ -1,0 +1,66 @@
+<link rel="import" href="../../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../services/rest/rest.html">
+
+<dom-module id="all-models">
+    <template>
+        <style>
+            :host {
+                margin: 10px;
+            }
+        </style>
+
+        <style is="custom-style">
+            .flex-equal-justified {
+                @apply(--layout-horizontal);
+                @apply(--layout-center-justified);
+                @apply(--layout-wrap);
+            }
+        </style>
+
+        <ajax-rest url="/api/profile" last-response="{{profile}}"></ajax-rest>
+
+        <div class="container flex-equal-justified">
+            <template is="dom-repeat" items="{{_toArray(profile)}}">
+                <paper-card style="margin:10px">
+                    <div class="card-header" style="width:400px;height:100px;color:#1E88E5">
+                        <h1 align="center">{{item.name}}</h1>
+                    </div>
+                    <div class="card-actions">
+                        <paper-button on-tap="_viewModel">View</paper-button>
+                    </div>
+                </paper-card>
+            </template>
+        </div>
+    </template>
+
+    <script>
+
+    Polymer({
+      is: 'all-models',
+      properties : {
+          model :{
+              type:String,
+              notify:true
+          }
+      },      
+      _viewModel: function(e){
+         this.set('route.path','/'+e.model.item.name);
+         this.page = 'home';
+         this.model = e.model.item.name;
+      },
+       _toArray: function(profile){ 
+        return Object.keys(profile._links).map(function(key) {
+            key =  key.charAt(0).toUpperCase() + key.substr(1).replace(/[A-Z]/g, ' $&');
+            return {
+                name: key,
+             };            
+        });
+      },
+    });
+    
+    </script>
+
+</dom-module>

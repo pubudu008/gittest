@@ -1,0 +1,10 @@
+{
+	"links": [ {
+		"rel": "alpha",
+		"href": "http://alpha.example.com",
+		"title": "Alpha"
+	}, {
+		"rel": "bravo",
+		"href": "http://bravo.example.com"
+	} ]
+}

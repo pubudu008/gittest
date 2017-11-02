@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aop-reference-model>
+<aop-project name="liquibase-first"/>
+<aop-project name="Livedocumentation"/>
+<aop-project name="polymer-springboot_v1"/>
+<aop-project name="spring-auto-restdocs-example"/>
+<aop-project name="ProjecNew"/>
+<aop-project name="rest-notes-spring-data-rest"/>
+<aop-project name="LivedocumentationAutoDocs"/>
+<aop-project name="user-registration"/>
+</aop-reference-model>

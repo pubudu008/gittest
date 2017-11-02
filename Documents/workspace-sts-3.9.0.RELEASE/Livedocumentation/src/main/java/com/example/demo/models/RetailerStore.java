@@ -1,0 +1,75 @@
+package com.example.demo.models;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+public class RetailerStore {
+	
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Long id;
+	
+	
+	@OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.EAGER)
+	private Ticker ticker;
+
+	@OneToOne(cascade = CascadeType.DETACH)
+	private State state;
+
+	@OneToOne(cascade = CascadeType.DETACH)
+	private City city;
+
+	@Column(name = "store_id")
+	private Integer storeId;
+
+	private String address;
+	private Long zip;
+
+	@Enumerated(EnumType.ORDINAL)
+	private Comment comment;
+
+	@Enumerated(EnumType.ORDINAL)
+	private MallType mallType;
+
+	private Integer storeNumber;
+	private Double latitude;
+	private Double longitude;
+	private Integer spaces;
+	private Integer minCars;
+	private Integer maxCars;
+
+	// additional mall details are added from here on
+	private String mallName;
+	private String mallAddress;
+	private String mallRemarks;
+	
+	@Enumerated(EnumType.ORDINAL)
+	private MallOnlyType mallOnlyType;
+	
+	@Enumerated(EnumType.STRING)
+	private Grade grade;
+	
+	@OneToOne(cascade = CascadeType.DETACH)
+	private Reit reit;
+	
+	private Integer cmbx;
+	@JsonIgnore
+	private Boolean activated=true;
+
+}

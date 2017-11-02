@@ -1,0 +1,87 @@
+<md-grid-list cols="2">
+  <md-grid-tile>
+    <form class="example-form">
+      <h1>User Details</h1>
+      <md-form-field class="example-full-width">
+        <input type="text" mdInput placeholder="first name" [(ngModel)]="user.firstName" [ngModelOptions]="{standalone: true}">
+      </md-form-field>
+      <md-form-field class="example-full-width">
+        <input type="text" mdInput placeholder="last name" [(ngModel)]="user.lastName" [ngModelOptions]="{standalone: true}">
+      </md-form-field>
+      <!-- <md-form-field class="example-full-width">
+<input type="text" mdInput placeholder="company name" [(ngModel)]="company.name" [ngModelOptions]="{standalone: true}">
+</md-form-field> -->
+
+      <md-form-field class="example-full-width">
+        <input mdInput placeholder="company name" mdInput [mdAutocomplete]="auto" [(ngModel)]="company.name" [ngModelOptions]="{standalone: true}">
+        <md-autocomplete #auto="mdAutocomplete">
+          <md-option *ngFor="let company of companies" [value]="company.name">
+            <span>{{ company.name }}</span>
+          </md-option>
+        </md-autocomplete>
+      </md-form-field>
+      <md-form-field class="example-full-width">
+        <input type="text" mdInput placeholder="email" [(ngModel)]="company.email" [ngModelOptions]="{standalone: true}">
+      </md-form-field>
+      <button md-raised-button (click)="onSave()" color="primary">save</button>
+
+    </form>
+  </md-grid-tile>
+
+  <!-- second form -->
+  <md-grid-tile>
+    <!-- <div class="example-container mat-elevation-z8">
+      <md-table #table [dataSource]="dataSource2">
+        <ng-container mdColumnDef="name">
+          <md-header-cell *mdHeaderCellDef>Company Name</md-header-cell>
+          <md-cell *mdCellDef="let element"> {{element.name}} </md-cell>
+        </ng-container>
+        <md-header-row *mdHeaderRowDef="displayed2Columns"></md-header-row>
+        <md-row (click)="onRowClick(row)" *mdRowDef="let row; columns: displayed2Columns;"></md-row>
+     
+      </md-table>
+    </div> -->
+    <form class="example-form">
+        <h1>Company Details</h1>
+      <md-form-field class="example-full-width">
+        <input mdInput placeholder="company name" mdInput [mdAutocomplete]="auto" [(ngModel)]="buildingComp.comp" [ngModelOptions]="{standalone: true}">
+        <md-autocomplete #auto="mdAutocomplete">
+          <md-option *ngFor="let company of companies" [value]="company.name" (onSelectionChange)="callSomeFunction($event,company)">
+            <span>{{ company.name }}</span>
+          </md-option>
+        </md-autocomplete>
+      </md-form-field>
+      <md-form-field class="example-full-width">
+        <input type="text" mdInput placeholder="Building Name" [(ngModel)]="building.name" [ngModelOptions]="{standalone: true}">
+      </md-form-field>
+      <md-form-field class="example-full-width">
+        <input type="text" mdInput placeholder="Building Code" [(ngModel)]="building.code" [ngModelOptions]="{standalone: true}">
+      </md-form-field>
+      <button md-raised-button (click)="onSaveBuilding()" color="primary">save</button>
+    </form>
+
+  </md-grid-tile>
+</md-grid-list>
+<h1>Table of Information</h1>
+<div class="example-container mat-elevation-z8">
+  <md-table #table [dataSource]="dataSource">
+    <ng-container mdColumnDef="Fname">
+      <md-header-cell *mdHeaderCellDef>First name </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.firstName}} </md-cell>
+    </ng-container>
+    <ng-container mdColumnDef="Lname">
+      <md-header-cell *mdHeaderCellDef>Last name </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.lastName}} </md-cell>
+    </ng-container>
+    <ng-container mdColumnDef="Cname">
+      <md-header-cell *mdHeaderCellDef>Company name </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.companyName}} </md-cell>
+    </ng-container>
+    <ng-container mdColumnDef="CompanyEmail">
+      <md-header-cell *mdHeaderCellDef>Company Email</md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.email}} </md-cell>
+    </ng-container>
+    <md-header-row *mdHeaderRowDef="displayedColumns"></md-header-row>
+    <md-row *mdRowDef="let row; columns: displayedColumns;"></md-row>
+  </md-table>
+</div>

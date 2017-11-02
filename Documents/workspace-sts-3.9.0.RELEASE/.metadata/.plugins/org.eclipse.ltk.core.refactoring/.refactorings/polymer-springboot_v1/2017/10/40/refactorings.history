@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy package &apos;com.hrandika.polymer.config&apos; to &apos;Livedocumentation/src/main/java/com.example.demo.models&apos;&#x0A;- Original project: &apos;polymer-springboot_v1&apos;&#x0A;- Destination element: &apos;Livedocumentation/src/main/java/com.example.demo.models&apos;&#x0A;- Original element: &apos;polymer-springboot_v1/src/main/java/com.hrandika.polymer.config&apos;" description="Copy package" destination="=Livedocumentation/src\/main\/java&lt;com.example.demo.models" element1="/src\/main\/java&lt;com.hrandika.polymer.config" flags="589830" fragments="1" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyPackages" stamp="1506923100414" version="1.0"/>
+</session>

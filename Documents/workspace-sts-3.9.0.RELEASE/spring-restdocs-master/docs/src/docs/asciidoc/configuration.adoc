@@ -1,0 +1,116 @@
+[[configuration]]
+== Configuration
+
+
+
+[[configuration-uris]]
+=== Documented URIs
+
+NOTE: As REST Assured tests a service by making actual HTTP requests, the documented
+URIs cannot be customized in this way. You should use the
+<<customizing-requests-and-responses-preprocessors-modify-uris, REST-Assured specific
+preprocessor>> instead.
+
+When using MockMvc, the default configuration for URIs documented by Spring REST Docs is:
+
+|===
+|Setting |Default
+
+|Scheme
+|`http`
+
+|Host
+|`localhost`
+
+|Port
+|`8080`
+|===
+
+This configuration is applied by `MockMvcRestDocumentationConfigurer`. You can use its API
+to change one or more of the defaults to suit your needs:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/mockmvc/CustomUriConfiguration.java[tags=custom-uri-configuration]
+----
+
+NOTE: If the port is set to the default for the configured scheme (port 80 for HTTP or
+port 443 for HTTPS), it will be omitted from any URIs in the generated snippets.
+
+TIP: To configure a request's context path, use the `contextPath` method on
+`MockHttpServletRequestBuilder`.
+
+
+
+[[configuration-snippet-encoding]]
+=== Snippet encoding
+
+The default snippet encoding is `UTF-8`. You can change the default snippet encoding
+using the `RestDocumentationConfigurer` API. For example, to use `ISO-8859-1`:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/CustomEncoding.java[tags=custom-encoding]
+----
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/CustomEncoding.java[tags=custom-encoding]
+----
+
+TIP: When Spring REST Docs converts a request or response's content to a String, the
+`charset` specified in the `Content-Type` header will be used if it is available. In its
+absence, the JVM's default `Charset` will be used. The JVM's default `Charset` can be
+configured using the `file.encoding` system property.
+
+
+
+[[configuration-snippet-template-format]]
+=== Snippet template format
+
+The default snippet template format is Asciidoctor. Markdown is also supported out of the
+box. You can change the default format using the `RestDocumentationConfigurer` API:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/CustomFormat.java[tags=custom-format]
+----
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/CustomFormat.java[tags=custom-format]
+----
+
+
+
+[[configuration-default-snippets]]
+=== Default snippets
+
+Six snippets are produced by default:
+
+- `curl-request`
+- `http-request`
+- `http-response`
+- `httpie-request`
+- `request-body`
+- `response-body`
+
+You can change the default snippet configuration during setup using the
+`RestDocumentationConfigurer` API. For example, to only produce the `curl-request`
+snippet by default:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/CustomDefaultSnippets.java[tags=custom-default-snippets]
+----
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/CustomDefaultSnippets.java[tags=custom-default-snippets]
+----

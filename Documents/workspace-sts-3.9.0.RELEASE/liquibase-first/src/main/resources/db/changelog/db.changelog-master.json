@@ -1,0 +1,7 @@
+{"databaseChangeLog": [{
+        "include": [{
+            "relativeToChangelogFile": true,
+            "file": "db.changelog-diff-2017-09-25T03:47:51Z.json"
+       }]
+    }]
+    }

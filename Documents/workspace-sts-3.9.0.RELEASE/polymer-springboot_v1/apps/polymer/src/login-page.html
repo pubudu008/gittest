@@ -1,0 +1,170 @@
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../bower_components/iron-a11y-keys/iron-a11y-keys.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+
+<link rel="import" href="../bower_components/neon-animation/neon-animatable-behavior.html">
+
+<dom-module id="login-page">
+  <template>
+    <style>
+      :host {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: var(--app-background);
+      }
+      
+      .logo {
+        font-size: 48px;
+        color: var(--app-accent-color);
+      }
+      
+      .login {
+        background: #fff;
+        box-sizing: border-box;
+        padding: 20px;
+        width: 400px;
+      }
+      
+      #login-button {
+        margin-top: 10px;
+        float: right;
+      }
+      
+      .error-message {
+        color: #DB4437;
+      }
+      
+      @media (max-width: 600px) {
+        :host {
+          justify-content: flex-end;
+        }
+        .logo {
+          font-size: 36px;
+        }
+        .login {
+          width: 100vw;
+          height: 50vh;
+        }
+      }
+    </style>
+
+    <h1 class="logo">Boot App Shell</h1>
+
+    <paper-material class="login" elevation="4">
+      <iron-a11y-keys keys="enter" on-keys-pressed="_logIn"></iron-a11y-keys>
+      <form is="iron-form" id="form" method="post" action="/api/oauth/token" headers='{{headers}}'>
+        <paper-input value={{username}} label="Username" name="username" required autofocus></paper-input>
+        <paper-input value="{{password}}" label="Password" name="password" type="password" required></paper-input>
+        <span class="error-message" hidden="[[!errorMessage]]">[[errorMessage]]</span>
+        <paper-button id="login-button" on-tap="_logIn" raised>Login</paper-button>
+        <button hidden="true"></button>
+      </form>
+    </paper-material>
+    <!--<hr/>
+    <paper-material  elevation="4">
+      <paper-button on-tap="_facebook" >Facebook</paper-button>
+      <paper-button on-tap="_github" >Github</paper-button>
+      <paper-button on-tap="_twitter" >Twitter</paper-button>
+      <paper-button on-tap="_google" >Google</paper-button>
+    </paper-material>-->
+  </template>
+  <script>
+    Polymer({
+      is: 'login-page',
+
+      behaviors: [Polymer.NeonAnimatableBehavior],
+
+      properties: {
+        username: String,
+        password: String,
+        errorMessage: String,
+        headers :{
+          type: Object,
+          computed:'_getHeaders(customHeader)'
+        },
+        customHeader: {
+            value: 'Authorization'
+        },
+        token: {
+          type: String,
+          notify: true
+        }
+      },
+
+      listeners: {
+        'iron-form-response': '_handleLoginSuccess',
+        'iron-form-error': '_handleLoginError',
+        'iron-form-presubmit':'_handlePreSubmit',
+      },
+
+      observers: ['_errorClearer(username, password)'],
+      
+      _getHeaders: function(customHeader){
+        var encoded ="Basic "+ this._encode("cleintID" + ':' + "clientPassword");
+        return {"Authorization":encoded};
+      },
+      _errorClearer: function() {
+        this.errorMessage = '';
+      },
+      _logIn: function() {
+        this.$.form.submit();
+      },
+      _encode : function(input){
+         var keyStr = 'ABCDEFGHIJKLMNOP' +
+        'QRSTUVWXYZabcdef' +
+        'ghijklmnopqrstuv' +
+        'wxyz0123456789+/' +
+        '=';
+         var output = '',
+            chr1, chr2, chr3 = '',
+            enc1, enc2, enc3, enc4 = '',
+            i = 0;
+
+        while (i < input.length) {
+            chr1 = input.charCodeAt(i++);
+            chr2 = input.charCodeAt(i++);
+            chr3 = input.charCodeAt(i++);
+
+            enc1 = chr1 >> 2;
+            enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+            enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+            enc4 = chr3 & 63;
+
+            if (isNaN(chr2)) {
+                enc3 = enc4 = 64;
+            } else if (isNaN(chr3)) {
+                enc4 = 64;
+            }
+
+            output = output +
+                keyStr.charAt(enc1) +
+                keyStr.charAt(enc2) +
+                keyStr.charAt(enc3) +
+                keyStr.charAt(enc4);
+            chr1 = chr2 = chr3 = '';
+            enc1 = enc2 = enc3 = enc4 = '';
+        }
+        return output;
+      },
+      _handleLoginSuccess: function(evt) {
+        this.token = evt.detail.xhr.response.access_token;
+      },
+      _handlePreSubmit : function(evt){
+        var body = this.$.form.request.body;
+        body['grant_type']="password";
+        body['scope']="read write";
+        body['client_secret']="clientPassword";
+        body['client_id']="cleintID";
+      },
+
+      _handleLoginError: function(evt) {
+        this.errorMessage = evt.detail.request.response.error_description
+      }
+    });
+  </script>
+</dom-module>

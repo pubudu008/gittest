@@ -1,0 +1,9 @@
+package com.example.demo.model;
+
+import java.util.List;
+
+public class Model {
+
+	String endPoint;
+	List<Property> property;
+}

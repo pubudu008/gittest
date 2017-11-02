@@ -1,0 +1,72 @@
+<link rel="import" href="../../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="../../../../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../../../../bower_components/app-route/app-location.html">
+<link rel="import" href="../../../../bower_components/app-route/app-route.html">
+
+<link rel="import" href="../../../../bower_components/neon-animation/neon-animated-pages.html">
+<link rel="import" href="../../../../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../../../../bower_components/neon-animation/animations/fade-out-animation.html">
+
+<dom-module id="admin-models">
+    <style is="custom-style" include="iron-flex">
+        :host {
+            margin: 10px;
+        }
+    </style>
+
+    <template>
+        <app-route route="{{route}}" pattern="/model" data="{{routeData}}"></app-route>
+
+        <neon-animated-pages role="main" selected="[[page]]" attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+            <all-models name="all-models" model={{model}}></all-models>
+            <single-model name="single-model" model={{model}} back="{{back}}"></single-model>
+        </neon-animated-pages>
+
+    </template>
+
+
+    <script>
+
+    Polymer({
+      is: 'admin-models',
+       properties: {
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+        listeners :{
+            'change':'_modelChanaged'
+        },
+        model :{
+            type:String,observer : '_modelChanaged'
+        },
+        back :{
+            type:Boolean,observer : '_backChanged'
+        }
+      },
+      ready:function(){
+          this.page = 'all-models';
+      },
+      _modelChanaged :function(){
+          this.page = 'single-model';
+          this.set('route.path',this.model);
+      },
+      _pageChanged: function(page) {
+        // load page import on demand.
+        this.importHref(this.resolveUrl(page + '.html'), null, null, true);
+      },
+      _backChanged: function(){
+          this.back = false;
+           this.page = 'all-models';
+            this.set('route.path','');
+      }
+    });
+    
+    </script>
+
+</dom-module>

@@ -1,0 +1,1201 @@
+[[documenting-your-api]]
+== Documenting your API
+
+This section provides more details about using Spring REST Docs to document your API.
+
+
+
+[[documenting-your-api-hypermedia]]
+=== Hypermedia
+
+Spring REST Docs provides support for documenting the links in a
+https://en.wikipedia.org/wiki/HATEOAS[Hypermedia-based] API:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Hypermedia.java[tag=links]
+----
+<1> Configure Spring REST docs to produce a snippet describing the response's links.
+	Uses the static `links` method on
+	`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+<2> Expect a link whose rel is `alpha`. Uses the static `linkWithRel` method on
+	`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+<3> Expect a link whose rel is `bravo`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Hypermedia.java[tag=links]
+----
+<1> Configure Spring REST docs to produce a snippet describing the response's links.
+	Uses the static `links` method on
+	`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+<2> Expect a link whose rel is `alpha`. Uses the static `linkWithRel` method on
+	`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+<3> Expect a link whose rel is `bravo`.
+
+The result is a snippet named `links.adoc` that contains a table describing the resource's
+links.
+
+TIP: If a link in the response has a `title`, the description can be omitted from its
+descriptor and the `title` will be used. If you omit the description and the link does
+not have a `title` a failure will occur.
+
+When documenting links, the test will fail if an undocumented link is found in the
+response. Similarly, the test will also fail if a documented link is not found in the
+response and the link has not been marked as optional.
+
+If you do not want to document a link, you can mark it as ignored. This will prevent it
+from appearing in the generated snippet while avoiding the failure described above.
+
+Links can also be documented in a relaxed mode where any undocumented links will not cause
+a test failure. To do so, use the `relaxedLinks` method on
+`org.springframework.restdocs.hypermedia.HypermediaDocumentation`. This can be useful when
+documenting a particular scenario where you only want to focus on a subset of the links.
+
+
+
+[[documenting-your-api-hypermedia-link-formats]]
+==== Hypermedia link formats
+
+Two link formats are understood by default:
+
+ * Atom – links are expected to be in an array named `links`. Used by default when the
+   content type of the response is compatible with `application/json`.
+ * HAL – links are expected to be in a map named `_links`. Used by default when the
+   content type of the response is compatible with `application/hal+json`.
+
+If you are using Atom or HAL-format links but with a different content type you can
+provide one of the built-in `LinkExtractor` implementations to `links`. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Hypermedia.java[tag=explicit-extractor]
+----
+<1> Indicate that the links are in HAL format. Uses the static `halLinks` method on
+`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Hypermedia.java[tag=explicit-extractor]
+----
+<1> Indicate that the links are in HAL format. Uses the static `halLinks` method on
+`org.springframework.restdocs.hypermedia.HypermediaDocumentation`.
+
+If your API represents its links in a format other than Atom or HAL, you can provide your
+own implementation of the `LinkExtractor` interface to extract the links from the
+response.
+
+
+
+[[documenting-your-api-hypermedia-ignoring-common-links]]
+==== Ignoring common links
+
+Rather than documenting links that are common to every response, such as `_self` and
+`curies` when using HAL, you may want to document them once in an overview section and
+then ignore them in the rest of your API's documentation. To do so, you can build on the
+<<documenting-your-api-reusing-snippets,support for reusing snippets>> to add link
+descriptors to a snippet that's preconfigured to ignore certain links. For example:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/Hypermedia.java[tags=ignore-links]
+----
+
+
+
+[[documenting-your-api-request-response-payloads]]
+=== Request and response payloads
+
+In addition to the hypermedia-specific support <<documenting-your-api-hypermedia,described
+above>>, support for general documentation of request and response payloads is also
+provided.
+
+By default, Spring REST Docs will automatically generate snippets for the body of the
+request and the body of the response. These snippets are named `request-body.adoc` and
+`response-body.adoc` respectively.
+
+
+
+[[documenting-your-api-request-response-payloads-fields]]
+==== Request and response fields
+
+To provide more detailed documentation of a request or response payload, support for
+documenting the payload's fields is provided.
+
+Consider the following payload:
+
+[source,json,indent=0]
+----
+	{
+		"contact": {
+			"name": "Jane Doe",
+			"email": "jane.doe@example.com"
+		}
+	}
+----
+
+Its fields can be documented like this:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=response]
+----
+<1> Configure Spring REST docs to produce a snippet describing the fields in the response
+	payload. To document a request `requestFields` can be used. Both are static methods on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+<2> Expect a field with the path `contact.email`. Uses the static `fieldWithPath` method
+	on `org.springframework.restdocs.payload.PayloadDocumentation`.
+<3> Expect a field with the path `contact.name`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=response]
+----
+<1> Configure Spring REST docs to produce a snippet describing the fields in the response
+	payload. To document a request `requestFields` can be used. Both are static methods on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+<2> Expect a field with the path `contact.email`. Uses the static `fieldWithPath` method on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+<3> Expect a field with the path `contact.name`.
+
+The result is a snippet that contains a table describing the fields. For requests this
+snippet is named `request-fields.adoc`. For responses this snippet is named
+`response-fields.adoc`.
+
+When documenting fields, the test will fail if an undocumented field is found in the
+payload. Similarly, the test will also fail if a documented field is not found in the
+payload and the field has not been marked as optional.
+
+If you don't want to provide detailed documentation for all of the fields, an entire
+subsection of a payload can be documented. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=subsection]
+----
+<1> Document the subsection with the path `contact`. `contact.email` and `contact.name`
+	are now seen has having also been documented. Uses the static `subsectionWithPath`
+	method on `org.springframework.restdocs.payload.PayloadDocumentation`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=subsection]
+----
+<1> Document the subsection with the path `contact`. `contact.email` and `contact.name`
+	are now seen has having also been documented. Uses the static `subsectionWithPath`
+	method on `org.springframework.restdocs.payload.PayloadDocumentation`.
+
+`subsectionWithPath` can be useful for providing a high-level overview of a particular
+section of a payload. Separate, more detailed documentation for a subsection can then
+<<documenting-your-api-request-response-payloads-subsections, be produced>>.
+
+If you do not want to document a field or subsection at all, you can mark it as ignored.
+This will prevent it from appearing in the generated snippet while avoiding the failure
+described above.
+
+Fields can also be documented in a relaxed mode where any undocumented fields will not
+cause a test failure. To do so, use the `relaxedRequestFields` and `relaxedResponseFields`
+methods on
+`org.springframework.restdocs.payload.PayloadDocumentation`. This can be useful when
+documenting a particular scenario where you only want to focus on a subset of the payload.
+
+TIP: By default, Spring REST Docs will assume that the payload you are documenting is
+JSON. If you want to document an XML payload the content type of the request or response
+must be compatible with `application/xml`.
+
+[[documenting-your-api-request-response-payloads-fields-json]]
+===== Fields in JSON payloads
+
+[[documenting-your-api-request-response-payloads-fields-json-field-paths]]
+====== JSON field paths
+
+JSON field paths use either dot notation or bracket notation. Dot notation uses '.' to
+separate each key in the path; `a.b`, for example. Bracket notation wraps each key in
+square brackets and single quotes; `['a']['b']`, for example. In either case, `[]` is used
+to identify an array. Dot notation is more concise, but using bracket notation enables the
+use of `.` within a key name; `['a.b']`, for example. The two different notations can be
+used in the same path; `a['b']`, for example.
+
+With this JSON payload:
+
+[source,json,indent=0]
+----
+	{
+		"a":{
+			"b":[
+				{
+					"c":"one"
+				},
+				{
+					"c":"two"
+				},
+				{
+					"d":"three"
+				}
+			],
+			"e.dot" : "four"
+		}
+	}
+----
+
+The following paths are all present:
+
+[cols="1,3"]
+|===
+|Path | Value
+
+|`a`
+|An object containing `b`
+
+|`a.b`
+|An array containing three objects
+
+|`['a']['b']`
+|An array containing three objects
+
+|`a['b']`
+|An array containing three objects
+
+|`['a'].b`
+|An array containing three objects
+
+|`a.b[]`
+|An array containing three objects
+
+|`a.b[].c`
+|An array containing the strings `one` and `two`
+
+|`a.b[].d`
+|The string `three`
+
+|`a['e.dot']`
+|The string `four`
+
+|`['a']['e.dot']`
+|The string `four`
+
+|===
+
+A payload that uses an array at its root can also be documented. The path `[]` will refer
+to the entire array. You can then use bracket or dot notation to identify fields within
+the array's entries. For example, `[].id` corresponds to the `id` field of every object
+found in the following array:
+
+[source,json,indent=0]
+----
+	[
+		{
+			"id":1
+		},
+		{
+			"id":2
+		}
+	]
+----
+
+You can use `\*` as a wildcard to match fields with different names. For example,
+`users.*.role` could be used to document the role of every user in the following JSON:
+
+[source,json,indent=0]
+----
+	{
+		"users":{
+			"ab12cd34":{
+				"role": "Administrator"
+			},
+			"12ab34cd":{
+				"role": "Guest"
+			}
+		}
+	}
+----
+
+[[documenting-your-api-request-response-payloads-fields-json-field-types]]
+====== JSON field types
+
+When a field is documented, Spring REST Docs will attempt to determine its type by
+examining the payload. Seven different types are supported:
+
+[cols="1,3"]
+|===
+| Type | Description
+
+| array
+| The value of each occurrence of the field is an array
+
+| boolean
+| The value of each occurrence of the field is a boolean (`true` or `false`)
+
+| object
+| The value of each occurrence of the field is an object
+
+| number
+| The value of each occurrence of the field is a number
+
+| null
+| The value of each occurrence of the field is `null`
+
+| string
+| The value of each occurrence of the field is a string
+
+| varies
+| The field occurs multiple times in the payload with a variety of different types
+|===
+
+The type can also be set explicitly using the `type(Object)` method on
+`FieldDescriptor`. The result of the supplied ``Object``'s `toString` method will be used
+in the documentation. Typically, one of the values enumerated by `JsonFieldType` will be
+used:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=explicit-type]
+----
+<1> Set the field's type to `string`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=explicit-type]
+----
+<1> Set the field's type to `string`.
+
+
+[[documenting-your-api-request-response-payloads-fields-xml]]
+===== XML payloads
+
+[[documenting-your-api-request-response-payloads-fields-xml-field-paths]]
+====== XML field paths
+
+XML field paths are described using XPath. `/` is used to descend into a child node.
+
+
+
+[[documenting-your-api-request-response-payloads-fields-xml-field-types]]
+====== XML field types
+
+When documenting an XML payload, you must provide a type for the field using the
+`type(Object)` method on `FieldDescriptor`. The result of the supplied type's `toString`
+method will be used in the documentation.
+
+
+
+[[documenting-your-api-request-response-payloads-fields-reusing-field-descriptors]]
+===== Reusing field descriptors
+
+In addition to the general support for <<documenting-your-api-reusing-snippets,reusing
+snippets>>, the request and response snippets allow additional descriptors to be
+configured with a path prefix. This allows the descriptors for a repeated portion of a
+request or response payload to be created once and then reused.
+
+Consider an endpoint that returns a book:
+
+[source,json,indent=0]
+----
+	{
+		"title": "Pride and Prejudice",
+		"author": "Jane Austen"
+	}
+----
+
+The paths for `title` and `author` are simply `title` and `author` respectively.
+
+Now consider an endpoint that returns an array of books:
+
+[source,json,indent=0]
+----
+	[{
+		"title": "Pride and Prejudice",
+		"author": "Jane Austen"
+	},
+	{
+		"title": "To Kill a Mockingbird",
+		"author": "Harper Lee"
+	}]
+----
+
+The paths for `title` and `author` are `[].title` and `[].author` respectively. The only
+difference between the single book and the array of books is that the fields' paths now
+have a `[].` prefix.
+
+The descriptors that document a book can be created:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/Payload.java[tags=book-descriptors]
+----
+
+They can then be used to document a single book:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=single-book]
+----
+<1> Document `title` and `author` using existing descriptors
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=single-book]
+----
+<1> Document `title` and `author` using existing descriptors
+
+And an array of books:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=book-array]
+----
+<1> Document the array
+<2> Document `[].title` and `[].author` using the existing descriptors prefixed with `[].`
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=book-array]
+----
+<1> Document the array
+<2> Document `[].title` and `[].author` using the existing descriptors prefixed with `[].`
+
+[[documenting-your-api-request-response-payloads-subsections]]
+==== Documenting a subsection of a request or response payload
+
+If a payload is large or structurally complex, it can be useful to document
+individual sections of the payload. REST Docs allows you to do so by extracting a
+subsection of the payload and then documenting it.
+
+[[documenting-your-api-request-response-payloads-subsections-body]]
+===== Documenting a subsection of a request or response body
+
+Consider the following JSON response body:
+
+[source,json,indent=0]
+----
+	{
+		"weather": {
+			"wind": {
+				"speed": 15.3,
+				"direction": 287.0
+			},
+			"temperature": {
+				"high": 21.2,
+				"low": 14.8
+			}
+		}
+	}
+----
+
+A snippet that documents the `temperature` object can be produces as follows:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=body-subsection]
+----
+<1> Produce a snippet containing a subsection of the response body. Uses the static
+	`responseBody` and `beneathPath` methods on
+	`org.springframework.restdocs.payload.PayloadDocumentation`. To produce a snippet
+	for the request body, `requestBody` can be used in place of `responseBody`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=body-subsection]
+----
+<1> Produce a snippet containing a subsection of the response body. Uses the static
+	`responseBody` and `beneathPath` methods on
+	`org.springframework.restdocs.payload.PayloadDocumentation`. To produce a snippet
+	for the request body, `requestBody` can be used in place of `responseBody`.
+
+The result is a snippet with the following contents:
+
+[source,json,indent=0]
+----
+	{
+		"temperature": {
+			"high": 21.2,
+			"low": 14.8
+		}
+	}
+----
+
+To make the snippet's name distinct, an identifier for the subsection is included. By
+default, this identifier is `beneath-${path}`. For example, the code above will result in
+a snippet named `response-body-beneath-weather.temperature.adoc`. The identifier can
+be customized using the `withSubsectionId(String)` method:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/Payload.java[tags=custom-subsection-id]
+----
+
+This example will result in a snippet named `request-body-temp.adoc`.
+
+
+
+[[documenting-your-api-request-response-payloads-subsections-fields]]
+===== Documenting the fields of a subsection of a request or response
+
+As well as documenting a subsection of a request or response body, it's also possible to
+document the fields in a particular subsection. A snippet that documents the fields of the `temperature` object (`high` and `low`) can be produced as follows:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=fields-subsection]
+----
+<1> Produce a snippet describing the fields in the subsection of the response payload
+	beneath the path `weather.temperature`. Uses the static `beneathPath` method on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+<2> Document the `high` and `low` fields.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=fields-subsection]
+----
+<1> Produce a snippet describing the fields in the subsection of the response payload
+	beneath the path `weather.temperature`. Uses the static `beneathPath` method on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+<2> Document the `high` and `low` fields.
+
+The result is a snippet that contains a table describing the `high` and `low` fields
+of `weather.temperature`. To make the snippet's name distinct, an identifier for the
+subsection is included. By default, this identifier is `beneath-${path}`. For
+example, the code above will result in a snippet named
+`response-fields-beneath-weather.temperature.adoc`.
+
+
+
+[[documenting-your-api-request-parameters]]
+=== Request parameters
+
+A request's parameters can be documented using `requestParameters`. Request parameters
+can be included in a `GET` request's query string. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/RequestParameters.java[tags=request-parameters-query-string]
+----
+<1> Perform a `GET` request with two parameters, `page` and `per_page` in the query
+	string.
+<2> Configure Spring REST Docs to produce a snippet describing the request's parameters.
+	Uses the static `requestParameters` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Document the `page` parameter. Uses the static `parameterWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<4> Document the `per_page` parameter.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RequestParameters.java[tags=request-parameters-query-string]
+----
+<1> Configure Spring REST Docs to  produce a snippet describing the request's parameters.
+	Uses the static `requestParameters` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<2> Document the `page` parameter. Uses the static `parameterWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Document the `per_page` parameter.
+<4> Perform a `GET` request with two parameters, `page` and `per_page` in the query
+	string.
+
+Request parameters can also be included as form data in the body of a POST request:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/RequestParameters.java[tags=request-parameters-form-data]
+----
+<1> Perform a `POST` request with a single parameter, `username`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RequestParameters.java[tags=request-parameters-form-data]
+----
+<1> Configure the `username` parameter.
+<2> Perform the `POST` request.
+
+In both cases, the result is a snippet named `request-parameters.adoc` that contains a
+table describing the parameters that are supported by the resource.
+
+When documenting request parameters, the test will fail if an undocumented request
+parameter is used in the request. Similarly, the test will also fail if a documented
+request parameter is not found in the request and the request parameter has not been
+marked as optional.
+
+If you do not want to document a request parameter, you can mark it as ignored. This will
+prevent it from appearing in the generated snippet while avoiding the failure described
+above.
+
+Request parameters can also be documented in a relaxed mode where any undocumented
+parameters will not cause a test failure. To do so, use the `relaxedRequestParameters`
+method on `org.springframework.restdocs.request.RequestDocumentation`. This can be useful
+when documenting a particular scenario where you only want to focus on a subset of the
+request parameters.
+
+
+
+[[documenting-your-api-path-parameters]]
+=== Path parameters
+
+A request's path parameters can be documented using `pathParameters`. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/PathParameters.java[tags=path-parameters]
+----
+<1> Perform a `GET` request with two path parameters, `latitude` and `longitude`.
+<2> Configure Spring REST Docs to produce a snippet describing the request's path
+	parameters. Uses the static `pathParameters` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Document the parameter named `latitude`. Uses the static `parameterWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<4> Document the parameter named `longitude`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/PathParameters.java[tags=path-parameters]
+----
+<1> Configure Spring REST Docs to produce a snippet describing the request's path
+	parameters. Uses the static `pathParameters` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<2> Document the parameter named `latitude`. Uses the static `parameterWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Document the parameter named `longitude`.
+<4> Perform a `GET` request with two path parameters, `latitude` and `longitude`.
+
+The result is a snippet named `path-parameters.adoc` that contains a table describing
+the path parameters that are supported by the resource.
+
+TIP: To make the path parameters available for documentation, the request must be
+built using one of the methods on `RestDocumentationRequestBuilders` rather than
+`MockMvcRequestBuilders`.
+
+When documenting path parameters, the test will fail if an undocumented path parameter
+is used in the request. Similarly, the test will also fail if a documented path parameter
+is not found in the request and the path parameter has not been marked as optional.
+
+Path parameters can also be documented in a relaxed mode where any undocumented
+parameters will not cause a test failure. To do so, use the `relaxedPathParameters`
+method on `org.springframework.restdocs.request.RequestDocumentation`. This can be useful
+when documenting a particular scenario where you only want to focus on a subset of the
+path parameters.
+
+If you do not want to document a path parameter, you can mark it as ignored. This will
+prevent it from appearing in the generated snippet while avoiding the failure described
+above.
+
+
+
+[[documenting-your-api-request-parts]]
+=== Request parts
+
+The parts of a multipart request can be documenting using `requestParts`. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/RequestParts.java[tags=request-parts]
+----
+<1> Perform a `POST` request with a single part named `file`.
+<2> Configure Spring REST Docs to produce a snippet describing the request's parts. Uses
+	the static `requestParts` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Document the part named `file`. Uses the static `partWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RequestParts.java[tags=request-parts]
+----
+<1> Configure Spring REST Docs to produce a snippet describing the request's parts. Uses
+	the static `requestParts` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<2> Document the part named `file`. Uses the static `partWithName` method on
+	`org.springframework.restdocs.request.RequestDocumentation`.
+<3> Configure the request with the part named `file`.
+<4> Perform the `POST` request to `/upload`.
+
+The result is a snippet named `request-parts.adoc` that contains a table describing the
+request parts that are supported by the resource.
+
+When documenting request parts, the test will fail if an undocumented part is used in the
+request. Similarly, the test will also fail if a documented part is not found in the
+request and the part has not been marked as optional.
+
+Request parts can also be documented in a relaxed mode where any undocumented
+parts will not cause a test failure. To do so, use the `relaxedRequestParts` method on
+`org.springframework.restdocs.request.RequestDocumentation`. This can be useful
+when documenting a particular scenario where you only want to focus on a subset of the
+request parts.
+
+If you do not want to document a request part, you can mark it as ignored. This will
+prevent it from appearing in the generated snippet while avoiding the failure described
+above.
+
+
+[[documenting-your-api-request-parts-payloads]]
+=== Request part payloads
+
+The payload of a request part can be documented in much the same way as the
+<<documenting-your-api-request-response-payloads,payload of a request>> with support
+for documenting a request part's body and its fields.
+
+
+
+[[documenting-your-api-request-parts-payloads-fields]]
+==== Documenting a request part's body
+
+A snippet containing the body of a request part can be generated:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/RequestPartPayload.java[tags=body]
+----
+<1> Configure Spring REST docs to produce a snippet containing the body of the
+	of the request part named `metadata`. Uses the static `requestPartBody` method on
+	`PayloadDocumentation`.
+	payload.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RequestPartPayload.java[tags=body]
+----
+<1> Configure Spring REST docs to produce a snippet containing the body of the request
+	part named `metadata`. Uses the static `requestPartBody` method on
+	`PayloadDocumentation`.
+
+The result is a snippet `request-part-${part-name}-body.adoc` that contains the part's
+body. For example, documenting a part named `metadata` will produce a snippet named
+`request-part-metadata-body.adoc`.
+
+
+
+[[documenting-your-api-request-parts-payloads-fields]]
+==== Documenting a request part's fields
+
+A request part's fields can be documented in much the same way as the fields of a request
+or response:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/RequestPartPayload.java[tags=fields]
+----
+<1> Configure Spring REST docs to produce a snippet describing the fields in the payload
+	of the request part named `metadata`. Uses the static `requestPartFields` method on
+	`PayloadDocumentation`.
+	payload.
+<2> Expect a field with the path `version`. Uses the static `fieldWithPath` method on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RequestPartPayload.java[tags=fields]
+----
+<1> Configure Spring REST docs to produce a snippet describing the fields in the payload
+	of the request part named `metadata`. Uses the static `requestPartFields` method on
+	`PayloadDocumentation`.
+<2> Expect a field with the path `version`. Uses the static `fieldWithPath` method on
+	`org.springframework.restdocs.payload.PayloadDocumentation`.
+
+The result is a snippet that contains a table describing the part's fields. This snippet
+is named `request-part-${part-name}-fields.adoc`. For example, documenting a part named
+`metadata` will produce a snippet named `request-part-metadata-fields.adoc`.
+
+When documenting fields, the test will fail if an undocumented field is found in the
+payload of the part. Similarly, the test will also fail if a documented field is not found
+in the payload of the part and the field has not been marked as optional. For payloads
+with a hierarchical structure, documenting a field is sufficient for all of its
+descendants to also be treated as having been documented.
+
+If you do not want to document a field, you can mark it as ignored. This will prevent it
+from appearing in the generated snippet while avoiding the failure described above.
+
+Fields can also be documented in a relaxed mode where any undocumented fields will not
+cause a test failure. To do so, use the `relaxedRequestPartFields` method on
+`org.springframework.restdocs.payload.PayloadDocumentation`. This can be useful when
+documenting a particular scenario where you only want to focus on a subset of the payload
+of the part.
+
+For further information on describing fields, documenting payloads that use XML,
+and more please refer to the
+<<documenting-your-api-request-response-payloads,section on documenting request and
+response payloads>>.
+
+[[documenting-your-api-http-headers]]
+=== HTTP headers
+
+The headers in a request or response can be documented using `requestHeaders` and
+`responseHeaders` respectively. For example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/HttpHeaders.java[tags=headers]
+----
+<1> Perform a `GET` request with an `Authorization` header that uses basic authentication
+<2> Configure Spring REST Docs to produce a snippet describing the request's headers.
+	Uses the static `requestHeaders` method on
+	`org.springframework.restdocs.headers.HeaderDocumentation`.
+<3> Document the `Authorization` header. Uses the static `headerWithName` method on
+	`org.springframework.restdocs.headers.HeaderDocumentation`.
+<4> Produce a snippet describing the response's headers. Uses the static `responseHeaders`
+	method on `org.springframework.restdocs.headers.HeaderDocumentation`.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/HttpHeaders.java[tags=headers]
+----
+<1> Configure Spring REST Docs to produce a snippet describing the request's headers.
+	Uses the static `requestHeaders` method on
+	`org.springframework.restdocs.headers.HeaderDocumentation`.
+<2> Document the `Authorization` header. Uses the static `headerWithName` method on
+	`org.springframework.restdocs.headers.HeaderDocumentation.
+<3> Produce a snippet describing the response's headers. Uses the static `responseHeaders`
+	method on `org.springframework.restdocs.headers.HeaderDocumentation`.
+<4> Configure the request with an `Authorization` header that uses basic authentication
+
+The result is a snippet named `request-headers.adoc` and a snippet named
+`response-headers.adoc`. Each contains a table describing the headers.
+
+When documenting HTTP Headers, the test will fail if a documented header is not found in
+the request or response.
+
+
+
+[[documenting-your-api-reusing-snippets]]
+=== Reusing snippets
+
+It's common for an API that's being documented to have some features that are common
+across several of its resources. To avoid repetition when documenting such resources a
+`Snippet` configured with the common elements can be reused.
+
+First, create the `Snippet` that describes the common elements. For example:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/SnippetReuse.java[tags=field]
+----
+
+Second, use this snippet and add further descriptors that are resource-specific. For
+example:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/MockMvcSnippetReuse.java[tags=use]
+----
+<1> Reuse the `pagingLinks` `Snippet` calling `and` to add descriptors that are specific
+	to the resource that is being documented.
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/RestAssuredSnippetReuse.java[tags=use]
+----
+<1> Reuse the `pagingLinks` `Snippet` calling `and` to add descriptors that are specific
+	to the resource that is being documented.
+
+The result of the example is that links with the rels `first`, `last`, `next`, `previous`,
+`alpha`, and `bravo` are all documented.
+
+
+
+[[documenting-your-api-constraints]]
+=== Documenting constraints
+
+Spring REST Docs provides a number of classes that can help you to document constraints.
+An instance of `ConstraintDescriptions` can be used to access descriptions of a class's
+constraints. For example:
+
+[source,java,indent=0]
+----
+include::{examples-dir}/com/example/Constraints.java[tags=constraints]
+----
+<1> Create an instance of `ConstraintDescriptions` for the `UserInput` class
+<2> Get the descriptions of the name property's constraints. This list will contain two
+	descriptions; one for the `NotNull` constraint and one for the `Size` constraint.
+
+The {samples}/rest-notes-spring-hateoas/src/test/java/com/example/notes/ApiDocumentation.java[`ApiDocumentation`]
+class in the Spring HATEOAS sample shows this functionality in action.
+
+
+
+[[documenting-your-api-constraints-finding]]
+==== Finding constraints
+
+By default, constraints are found using a Bean Validation `Validator`. Currently, only
+property constraints are supported. You can customize the `Validator` that's used by
+creating `ConstraintDescriptions` with a custom `ValidatorConstraintResolver` instance.
+To take complete control of constraint resolution, your own implementation of
+`ConstraintResolver` can be used.
+
+
+
+[[documenting-your-api-constraints-describing]]
+==== Describing constraints
+
+Default descriptions are provided for all of the Bean Validation 1.1's constraints:
+
+* AssertFalse
+* AssertTrue
+* DecimalMax
+* DecimalMin
+* Digits
+* Future
+* Max
+* Min
+* NotNull
+* Null
+* Past
+* Pattern
+* Size
+
+Default descriptions are also provided for constraints from Hibernate Validator:
+
+* CreditCardNumber
+* EAN
+* Email
+* Length
+* LuhnCheck
+* Mod10Check
+* Mod11Check
+* NotBlank
+* NotEmpty
+* Range
+* SafeHtml
+* URL
+
+To override the default descriptions, or to provide a new description, create a resource
+bundle with the base name
+`org.springframework.restdocs.constraints.ConstraintDescriptions`.  The Spring
+HATEOAS-based sample contains
+{samples}/rest-notes-spring-hateoas/src/test/resources/org/springframework/restdocs/constraints/ConstraintDescriptions.properties[an
+example of such a resource bundle].
+
+Each key in the resource bundle is the fully-qualified name of a constraint plus
+`.description`. For example, the key for the standard `@NotNull` constraint is
+`javax.validation.constraints.NotNull.description`.
+
+Property placeholder's referring to a constraint's attributes can be used in its
+description. For example, the default description of the `@Min` constraint,
+`Must be at least ${value}`, refers to the constraint's `value` attribute.
+
+To take more control of constraint description resolution, create `ConstraintDescriptions`
+with a custom `ResourceBundleConstraintDescriptionResolver`. To take complete control,
+create `ConstraintDescriptions` with a custom `ConstraintDescriptionResolver`
+implementation.
+
+
+
+==== Using constraint descriptions in generated snippets
+
+Once you have a constraint's descriptions, you're free to use them however you like in
+the generated snippets. For example, you may want to include the constraint descriptions
+as part of a field's description. Alternatively, you could include the constraints as
+<<documenting-your-api-customizing-including-extra-information, extra information>> in
+the request fields snippet. The
+{samples}/rest-notes-spring-hateoas/src/test/java/com/example/notes/ApiDocumentation.java[`ApiDocumentation`]
+class in the Spring HATEOAS-based sample illustrates the latter approach.
+
+
+
+[[documenting-your-api-default-snippets]]
+=== Default snippets
+
+A number of snippets are produced automatically when you document a request and response.
+
+[cols="1,3"]
+|===
+|Snippet | Description
+
+| `curl-request.adoc`
+| Contains the http://curl.haxx.se[`curl`] command that is equivalent to the `MockMvc`
+call that is being documented
+
+| `httpie-request.adoc`
+| Contains the http://httpie.org[`HTTPie`] command that is equivalent to the `MockMvc`
+call that is being documented
+
+| `http-request.adoc`
+| Contains the HTTP request that is equivalent to the `MockMvc` call that is being
+documented
+
+| `http-response.adoc`
+| Contains the HTTP response that was returned
+
+| `request-body.adoc`
+| Contains the body of the request that was sent
+
+| `response-body.adoc`
+| Contains the body of the response that was returned
+
+|===
+
+You can configure which snippets are produced by default. Please refer to the
+<<configuration, configuration section>> for more information.
+
+
+
+[[documentating-your-api-parameterized-output-directories]]
+=== Using parameterized output directories
+
+The output directory used by `document` can be parameterized. The following parameters
+are supported:
+
+[cols="1,3"]
+|===
+| Parameter | Description
+
+| {methodName}
+| The unmodified name of the test method
+
+| {method-name}
+| The name of the test method, formatted using kebab-case
+
+| {method_name}
+| The name of the test method, formatted using snake_case
+
+| {ClassName}
+| The unmodified simple name of the test class
+
+| {class-name}
+| The simple name of the test class, formatted using kebab-case
+
+| {class_name}
+| The simple name of the test class, formatted using snake_case
+
+| {step}
+| The count of calls made to the service in the current test
+|===
+
+For example, `document("{class-name}/{method-name}")` in a test method named
+`creatingANote` on the test class `GettingStartedDocumentation`, will write
+snippets into a directory named `getting-started-documentation/creating-a-note`.
+
+A parameterized output directory is particularly useful in combination with an `@Before`
+method. It allows documentation to be configured once in a setup method and then reused
+in every test in the class:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/ParameterizedOutput.java[tags=parameterized-output]
+----
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/ParameterizedOutput.java[tags=parameterized-output]
+----
+
+With this configuration in place, every call to the service you are testing will produce
+the <<documenting-your-api-default-snippets,default snippets>> without any further
+configuration. Take a look at the `GettingStartedDocumentation` classes in each of the
+sample applications to see this functionality in action.
+
+
+
+[[documenting-your-api-customizing]]
+=== Customizing the output
+
+
+
+[[documenting-your-api-customizing-snippets]]
+==== Customizing the generated snippets
+Spring REST Docs uses https://mustache.github.io[Mustache] templates to produce the
+generated snippets.
+{source}/spring-restdocs-core/src/main/resources/org/springframework/restdocs/templates[Default
+templates] are provided for each of the snippets that Spring REST Docs can produce. To
+customize a snippet's content, you can provide your own template.
+
+Templates are loaded from the classpath from an `org.springframework.restdocs.templates`
+subpackage. The name of the subpackage is determined by the ID of the template format
+that is in use. The default template format, Asciidoctor, has the ID `asciidoctor` so
+snippets are loaded from `org.springframework.restdocs.templates.asciidoctor`. Each
+template is named after the snippet that it will produce. For example, to
+override the template for the `curl-request.adoc` snippet, create a template named
+`curl-request.snippet` in
+`src/test/resources/org/springframework/restdocs/templates/asciidoctor`.
+
+
+
+[[documenting-your-api-customizing-including-extra-information]]
+==== Including extra information
+
+There are two ways to provide extra information for inclusion in a generated snippet:
+
+. Use the `attributes` method on a descriptor to add one or more attributes to it.
+. Pass in some attributes when calling `curlRequest`, `httpRequest`, `httpResponse`, etc.
+  Such attributes will be associated with the snippet as a whole.
+
+Any additional attributes are made available during the template rendering process.
+Coupled with a custom snippet template, this makes it possible to include extra
+information in a generated snippet.
+
+A concrete example of the above is the addition of a constraints column and a title when
+documenting request fields. The first step is to provide a `constraints` attribute for
+each field that you are documenting and to provide a `title` attribute:
+
+[source,java,indent=0,role="primary"]
+.MockMvc
+----
+include::{examples-dir}/com/example/mockmvc/Payload.java[tags=constraints]
+----
+<1> Configure the `title` attribute for the request fields snippet
+<2> Set the `constraints` attribute for the `name` field
+<3> Set the `constraints` attribute for the `email` field
+
+[source,java,indent=0,role="secondary"]
+.REST Assured
+----
+include::{examples-dir}/com/example/restassured/Payload.java[tags=constraints]
+----
+<1> Configure the `title` attribute for the request fields snippet
+<2> Set the `constraints` attribute for the `name` field
+<3> Set the `constraints` attribute for the `email` field
+
+The second step is to provide a custom template named `request-fields.snippet` that
+includes the information about the fields' constraints in the generated snippet's table
+and adds a title:
+
+[source,indent=0]
+----
+	.{{title}} <1>
+	|===
+	|Path|Type|Description|Constraints <2>
+
+	{{#fields}}
+	|{{path}}
+	|{{type}}
+	|{{description}}
+	|{{constraints}} <3>
+
+	{{/fields}}
+	|===
+----
+<1> Add a title to the table
+<2> Add a new column named "Constraints"
+<3> Include the descriptors' `constraints` attribute in each row of the table

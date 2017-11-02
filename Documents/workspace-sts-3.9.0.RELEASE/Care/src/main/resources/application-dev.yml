@@ -1,0 +1,19 @@
+server:
+  port: 8081
+spring:
+  profiles:
+    active:
+    - dev
+  datasource:
+    url: jdbc:h2:file:./target/test;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    dbcp2:
+      validation-query: SELECT 1
+      test-on-borrow: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+liquibase:
+  enabled: false

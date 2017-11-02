@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="true" key="isRegEx"/>
+		<item value="retailer-stores" key="selection"/>
+		<item value="true" key="casesensitive"/>
+		<item value="true" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="false" key="wholeword"/>
+		<list key="findhistory">
+			<item value="retailer-stores"/>
+			<item value="retailer-stores-list-example"/>
+			<item value="retailerStores-"/>
+			<item value=":retailerStores-"/>
+			<item value="/retailerStores-"/>
+			<item value="auto-auto"/>
+			<item value="response-fields"/>
+			<item value="hibernate"/>
+			<item value="hibernate.properties"/>
+			<item value="OperationResponsePreprocessor"/>
+			<item value="RestDocumentationResultHandler"/>
+			<item value="documentAuthorization"/>
+			<item value="getAccessToken"/>
+			<item value="userToken"/>
+			<item value="\*"/>
+		</list>
+		<list key="replacehistory">
+			<item value="retailer-stores-tests/retailer-stores"/>
+			<item value="retailer-stores-tests/retailer-stores-list-example"/>
+			<item value="retailer-stores-"/>
+			<item value=":retailer-stores-"/>
+			<item value="/retailer-stores-"/>
+			<item value="auto"/>
+			<item value="auto-response-fields"/>
+			<item value=""/>
+			<item value="Ticker"/>
+			<item value="tickers"/>
+			<item value="Tickers"/>
+			<item value="State"/>
+			<item value="states"/>
+			<item value="States"/>
+			<item value="Reit"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="338" key="DIALOG_WIDTH"/>
+		<item value="1|Ubuntu|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
+		<item value="406" key="DIALOG_HEIGHT"/>
+		<item value="931" key="DIALOG_X_ORIGIN"/>
+		<item value="58" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>

@@ -1,0 +1,1334 @@
+package com.example.demo;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.subsectionWithPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.awt.PageAttributes.MediaType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.servlet.RequestDispatcher;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.internal.matchers.GreaterThan;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.payload.JsonFieldType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.client.match.MockRestRequestMatchers;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.Base64Utils;
+import org.springframework.web.context.WebApplicationContext;
+import static org.hamcrest.Matchers.greaterThan;
+
+import com.example.demo.models.Reit;
+import com.example.demo.models.City;
+import com.example.demo.models.RetailerStore;
+import com.example.demo.models.Role;
+import com.example.demo.models.State;
+import com.example.demo.models.Ticker;
+import com.example.demo.models.User;
+import com.example.demo.repository.CityRepository;
+import com.example.demo.repository.ReitRepository;
+import com.example.demo.repository.RetailerStoreRepository;
+import com.example.demo.repository.RoleRepository;
+import com.example.demo.repository.StateRepository;
+import com.example.demo.repository.TickerRepository;
+import com.example.demo.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class LivedocumentationApplicationTests {
+	
+	@Test
+	public void contextLoads() {
+	}
+	
+	@Inject
+	private UserRepository userRepository;
+	
+	@Inject
+	private RoleRepository roleRepository;
+	
+	
+	@Test
+	public void loadAdminUser(){
+		
+		User admin = userRepository.findFirstByUserName("admin");
+		
+		if (admin == null) {
+			admin = new User();
+			admin.setUserName("admin");
+			admin.setPassword("admin");
+			admin.setActivated(true);
+			admin.setEmail("admin@admin.com");
+			
+			Set<Role> roles = new HashSet<>();
+			Role adminR =new Role();
+			adminR.setName("ROLE_ADMIN");
+			roles.add(adminR);
+			roleRepository.save(adminR);
+			
+			Role userR = new Role();
+			userR.setName("ROLE_USER");
+			roles.add(userR);
+			roleRepository.save(userR);
+			
+			admin.setRoles(roles);
+		
+			userRepository.save(admin);
+			log.info("Saving admin with default password:admin");
+		}
+	}
+	
+	
+@Rule
+	public final JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation();
+
+	@Autowired
+	private CityRepository cityRepository;
+
+	@Autowired
+	private ReitRepository reitRepository;
+
+	@Autowired
+	private StateRepository stateRepository;
+
+	@Autowired
+	private RetailerStoreRepository retailerStoreRepository;
+	@Autowired
+	private TickerRepository tickerRepository;
+
+	
+	
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	private WebApplicationContext context;
+
+	private MockMvc mockMvc;
+	
+	@Before
+	public void setUp() {
+		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context)
+				.apply(documentationConfiguration(this.restDocumentation)).build();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private String getAccessToken(String username, String password) throws Exception {
+		String authorization = "Basic "
+				+ new String(Base64Utils.encode("cleintID:clientPassword".getBytes()));
+		String contentType = org.springframework.http.MediaType.APPLICATION_JSON + ";charset=UTF-8";
+
+		// @formatter:off
+		String content = mvc
+				.perform(
+						post("/oauth/token")
+								.header("Authorization", authorization)
+								.contentType(
+										org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED)
+								.param("username", username)
+								.param("password", password)
+								.param("grant_type", "password")
+								.param("scope", "read write")
+								.param("client_id", "clientapp")
+								.param("client_secret", "123456"))
+				.andExpect(status().isOk())
+				.andExpect(MockRestRequestMatchers.content().contentType(contentType))
+				.andExpect(jsonPath("$.access_token", is(notNullValue())))
+				.andExpect(jsonPath("$.token_type", is(equalTo("bearer"))))
+				.andExpect(jsonPath("$.refresh_token", is(notNullValue())))
+				.andExpect(jsonPath("$.expires_in", is(GreaterThan(4000))))
+				.andExpect(jsonPath("$.scope", is(equalTo("read write"))))
+				.andReturn().getResponse().getContentAsString();
+
+		// @formatter:on
+
+		return content.substring(17, 53);
+	}
+	
+	
+	
+	
+	
+	
+	
+	/*
+	  ==============================RetailerStore entity================================
+	  error example
+	  
+	  @author Pubudu Sanadaruwan
+	  @throws Exception
+	 */
+	
+	@Test
+	public void errorExample() throws Exception {
+		this.mockMvc
+				.perform(get("/api/error")
+						.requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 400)
+						.requestAttr(RequestDispatcher.ERROR_REQUEST_URI,
+								"/api/RetailerStores")
+						.requestAttr(RequestDispatcher.ERROR_MESSAGE,
+								"The city 'http://localhost:8085/api/cities/123' does not exist"))
+				.andDo(print()).andExpect(status().isBadRequest())
+				.andExpect(jsonPath("error", is("Bad Request")))
+				.andExpect(jsonPath("timestamp", is(notNullValue())))
+				.andExpect(jsonPath("status", is(400)))
+				.andExpect(jsonPath("path", is(notNullValue())))
+				.andDo(document("error-example",
+						responseFields(
+								fieldWithPath("error").description("The HTTP error that occurred, e.g. `Bad Request`"),
+								fieldWithPath("message").description("A description of the cause of the error"),
+								fieldWithPath("path").description("The path to which the request was made"),
+								fieldWithPath("status").description("The HTTP status code, e.g. `400`"),
+								fieldWithPath("timestamp").description("The time, in milliseconds, at which the error occurred"))));
+	}
+	
+	/*
+	 Index example
+	
+	 @author Pubudu Sanadaruwan
+	 @throws Exception
+	 */
+
+	@Test
+	public void indexExample() throws Exception {
+		this.mockMvc.perform(get("/"))
+			.andExpect(status().isOk())
+			.andDo(document("index-example",
+					links(
+							linkWithRel("cities").description("The <<resources-cities,Cities resource>>"),
+							linkWithRel("states").description("The <<resources-states,States resource>>"),
+							linkWithRel("retailerStores").description("The <<resources-retailerStores,RetailerStores resource>>"),
+							linkWithRel("reits").description("The <<resources-reits,Reits resource>>"),
+							linkWithRel("tickers").description("The <<resources-tickers,Tickers resource>>"),
+							
+							linkWithRel("profile").description("The ALPS profile for the service")),
+					responseFields(
+							subsectionWithPath("_links").description("<<resources-index-links,Links>> to other resources"))));
+
+	}
+
+
+	/*
+	  List retailerStore example
+	  
+	  @author Pubudu Sanadaruwan
+	  @throws Exception
+	 */
+		
+	@Test
+	public void retailerStoresListExample() throws Exception {
+		this.retailerStoreRepository.deleteAll();
+
+		createRetailerStores(1,"Rathmalana", 2L,3,0.1,0.2,4,10,100,"mall","mallAddress","mallRemark",1,true);
+		createRetailerStores(2,"dehiwala", 3L,4,0.4,0.5,6,100,1000,"mall2","mallAddress2","mallRemark2",2,true);
+
+		
+		
+		this.mockMvc.perform(get("/api/retailerStores"))
+			.andExpect(status().isOk())
+			.andDo(document("retailerStores-list-example",
+					links(
+							linkWithRel("self").description("Canonical link for this resource"),
+							linkWithRel("profile").description("The ALPS profile for this resource")),
+					responseFields(
+							subsectionWithPath("_embedded.retailerStores").description("An array of <<resources-retailerStore, RetailerStore resources>>"),
+							subsectionWithPath("page").description("pagination"),
+							subsectionWithPath("_links").description("<<resources-retailerStores-list-links, Links>> to other resources"))));
+	}
+			
+	private void createRetailerStores(
+			int storeId, 
+			String address,
+			long zip,
+			int storeNumber,
+			double latitude,
+			double longitude,
+			int spaces,
+			int minCars,
+			int maxCars,
+			String mallName,
+	      String mallAddress,
+	String mallRemarks,
+	int cmbx,
+	boolean activated) {
+		RetailerStore retailerStore=new RetailerStore();
+		retailerStore.setActivated(activated);
+		retailerStore.setAddress(address);
+		retailerStore.setCmbx(cmbx);
+		retailerStore.setLatitude(latitude);
+		retailerStore.setLongitude(longitude);
+		retailerStore.setMallAddress(mallAddress);
+		retailerStore.setMallName(mallName);
+		retailerStore.setMallRemarks(mallRemarks);
+		retailerStore.setMaxCars(maxCars);
+		retailerStore.setMinCars(minCars);
+		retailerStore.setSpaces(spaces);
+		retailerStore.setStoreId(storeId);
+		retailerStore.setStoreNumber(storeNumber);
+		retailerStore.setZip(zip);
+		
+		this.retailerStoreRepository.save(retailerStore);
+		
+	}
+		
+	
+	/*
+	 creating example
+	  
+	 @author Pubudu Sanadaruwan
+	 @throws Exception
+	 */
+	@Test
+	public void retailerStoresCreateExample() throws Exception {
+		
+		Map<String, String> ticker = new HashMap<String, String>();
+		ticker.put("name", "REST1");
+
+		String tickerLocation = this.mockMvc
+				.perform(
+				post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(ticker)))
+				.andExpect(status().isCreated()).andReturn().getResponse()
+				.getHeader("Location");
+
+		
+		Map<String, String> city = new HashMap<String, String>();
+		city.put("name", "REST1");
+String cityLocation = this.mockMvc
+				.perform(
+				post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(city)))
+				.andExpect(status().isCreated()).andReturn().getResponse()
+				.getHeader("Location");
+		
+
+
+Map<String, String> reit = new HashMap<String, String>();
+reit.put("name", "REST1");
+String reitLocation = this.mockMvc
+		.perform(
+		post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+		this.objectMapper.writeValueAsString(reit)))
+		.andExpect(status().isCreated()).andReturn().getResponse()
+		.getHeader("Location");
+		
+		
+		
+		Map<String, String> state = new HashMap<String, String>();
+		state.put("name", "REST1");
+String stateLocation = this.mockMvc
+				.perform(
+				post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(state)))
+				.andExpect(status().isCreated()).andReturn().getResponse()
+				.getHeader("Location");
+		
+		
+		
+				Map<String, Object> retailerStores = new HashMap<String, Object>();
+		
+		                    retailerStores.put("storeId", 4544);
+				            retailerStores.put("address","Rathmalana PAnnipitiya");
+				            retailerStores.put("zip",2);
+							retailerStores.put("storeNumber",3);
+							retailerStores.put("latitude",0.1);
+							retailerStores.put("longitude",0.2);
+							retailerStores.put("spaces",4);
+							retailerStores.put("minCars",10);
+							retailerStores.put("maxCars",100);
+							retailerStores.put("comment",null);
+							retailerStores.put("mallType",null);
+							retailerStores.put("mallOnlyType",null);
+							retailerStores.put("grade",null);
+							retailerStores.put("mallName","mall");
+							retailerStores.put("mallAddress","mallAddress");
+							retailerStores.put("mallRemarks","mallRemark");
+							retailerStores.put("cmbx",1);
+							retailerStores.put("activated",true);
+		retailerStores.put("ticker", tickerLocation);
+		retailerStores.put("city", cityLocation);
+		retailerStores.put("reit", reitLocation);
+		retailerStores.put("state", stateLocation);
+		this.mockMvc.perform(
+				post("/api/retailerStores").contentType(MediaTypes.HAL_JSON).content(
+						this.objectMapper.writeValueAsString(retailerStores))).andExpect(
+				status().isCreated())
+				.andDo(document("retailerStores-create-example",
+						requestFields(
+								fieldWithPath("storeId").description("The storeId of the retailerStore"),
+								fieldWithPath("address").description("The address of the retailerStore"),
+								fieldWithPath("zip").description("The zip of the retailerStore"),
+								fieldWithPath("storeNumber").description("The storeNumber of the retailerStore"),
+								fieldWithPath("latitude").description("The latitude of the retailerStore"),
+								fieldWithPath("longitude").description("The longitude of the retailerStore"),
+								fieldWithPath("spaces").description("The spaces of the retailerStore"),
+								fieldWithPath("minCars").description("The minCars of the retailerStore"),
+								fieldWithPath("maxCars").description("The maxCars of the retailerStore"),
+								fieldWithPath("comment").description("The comment of the retailerStore"),
+								fieldWithPath("mallType").description("The mallType of the retailerStore"),
+								fieldWithPath("mallOnlyType").description("The mallOnlyType of the retailerStore"),
+								fieldWithPath("grade").description("The grade of the retailerStore"),
+								fieldWithPath("mallName").description("The mallName of the retailerStore"),
+								fieldWithPath("mallAddress").description("The mallAddress of the retailerStore"),
+								fieldWithPath("mallRemarks").description("The mallRemarks of the retailerStore"),
+								fieldWithPath("cmbx").description("The cmbx of the retailerStore"),
+								fieldWithPath("activated").description("The activated of the retailerStore"),
+								
+								fieldWithPath("state").description("An object of state resource URIs"),
+		fieldWithPath("reit").description("An object of reit resource URIs"),
+		fieldWithPath("ticker").description("An object of ticker resource URIs"),
+		fieldWithPath("city").description("An object of city resource URIs"))));
+
+	
+		
+	}
+	
+	
+	/*
+	  Get retailerStore example
+	  
+	  @author Pubudu Sanadaruwan
+	  @throws Exception
+	 */
+
+@Test
+public void retailerStoreGetExample() throws Exception {
+	Map<String, String> ticker = new HashMap<String, String>();
+	ticker.put("name", "REST");
+
+	String tickerLocation = this.mockMvc
+			.perform(
+			post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(ticker)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	
+	Map<String, String> city = new HashMap<String, String>();
+	city.put("name", "REST");
+String cityLocation = this.mockMvc
+			.perform(
+			post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(city)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+	
+
+
+Map<String, String> reit = new HashMap<String, String>();
+reit.put("name", "REST");
+String reitLocation = this.mockMvc
+	.perform(
+	post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+	this.objectMapper.writeValueAsString(reit)))
+	.andExpect(status().isCreated()).andReturn().getResponse()
+	.getHeader("Location");
+	
+	
+	
+	Map<String, String> state = new HashMap<String, String>();
+	state.put("name", "REST");
+String stateLocation = this.mockMvc
+			.perform(
+			post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(state)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+	
+
+
+Map<String, Object> retailerStores = new HashMap<String, Object>();
+
+retailerStores.put("storeId", 454457);
+retailerStores.put("address","Rathmalana Galle mathara");
+retailerStores.put("zip",2);
+retailerStores.put("storeNumber",3);
+retailerStores.put("latitude",0.1);
+retailerStores.put("longitude",0.2);
+retailerStores.put("spaces",4);
+retailerStores.put("minCars",10);
+retailerStores.put("maxCars",100);
+retailerStores.put("comment",null);
+retailerStores.put("mallType",null);
+retailerStores.put("mallOnlyType",null);
+retailerStores.put("grade",null);
+retailerStores.put("mallName","mall");
+retailerStores.put("mallAddress","mallAddress");
+retailerStores.put("mallRemarks","mallRemark");
+retailerStores.put("cmbx",1);
+retailerStores.put("activated",true);
+retailerStores.put("tickers", tickerLocation);
+retailerStores.put("cities", cityLocation);
+retailerStores.put("reits", reitLocation);
+retailerStores.put("states", stateLocation);
+
+String retailerStoreLocation = this.mockMvc
+.perform(
+		post("/api/retailerStores").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(retailerStores)))
+.andExpect(status().isCreated()).andReturn().getResponse()
+.getHeader("Location");
+
+	this.mockMvc.perform(get(retailerStoreLocation)).andExpect(status().isOk())
+	.andExpect(jsonPath("storeId", is(retailerStores.get("storeId"))))
+	.andExpect(jsonPath("address", is(retailerStores.get("address"))))
+	.andExpect(jsonPath("zip", is(retailerStores.get("zip"))))
+	.andExpect(jsonPath("storeNumber", is(retailerStores.get("storeNumber"))))
+	.andExpect(jsonPath("latitude", is(retailerStores.get("latitude"))))
+	.andExpect(jsonPath("longitude", is(retailerStores.get("longitude"))))
+	.andExpect(jsonPath("spaces", is(retailerStores.get("spaces"))))
+	.andExpect(jsonPath("minCars", is(retailerStores.get("minCars"))))
+	.andExpect(jsonPath("maxCars", is(retailerStores.get("maxCars"))))
+	.andExpect(jsonPath("mallName", is(retailerStores.get("mallName"))))
+	.andExpect(jsonPath("mallAddress", is(retailerStores.get("mallAddress"))))
+	.andExpect(jsonPath("mallRemarks", is(retailerStores.get("mallRemarks"))))
+	.andExpect(jsonPath("cmbx", is(retailerStores.get("cmbx"))))
+	.andExpect(jsonPath("grade", is(retailerStores.get("grade"))))
+	.andExpect(jsonPath("mallOnlyType", is(retailerStores.get("mallOnlyType"))))
+	.andExpect(jsonPath("mallType", is(retailerStores.get("mallType"))))
+	.andExpect(jsonPath("comment", is(retailerStores.get("comment"))))
+	.andExpect(jsonPath("activated", is(retailerStores.get("activated"))))
+	.andExpect(jsonPath("_links.self.href", is(retailerStoreLocation)))
+	.andExpect(jsonPath("_links.city", is(notNullValue())))
+.andExpect(jsonPath("_links.reit", is(notNullValue())))
+.andExpect(jsonPath("_links.state", is(notNullValue())))
+.andExpect(jsonPath("_links.ticker", is(notNullValue())))
+		.andDo(print())
+		.andDo(document("retailerStores-get-example",
+				links(
+						linkWithRel("self").description("Canonical link for this <<resources-retailerStore,retailerStore>>"),
+						linkWithRel("retailerStore").description("This <<resources-retailerStore,retailerStore>>"),
+						linkWithRel("city").description("This retailerStore's cities"),
+				linkWithRel("reit").description("This retailerStore's reits"),
+				linkWithRel("state").description("This retailerStore's states"),
+		linkWithRel("ticker").description("This retailerStore's tickers")),
+				responseFields(
+						fieldWithPath("storeId").description("The storeId of the retailerStore"),
+						fieldWithPath("address").description("The address of the retailerStore"),
+						fieldWithPath("zip").description("The zip of the retailerStore"),
+						fieldWithPath("storeNumber").description("The storeNumber of the retailerStore"),
+						fieldWithPath("latitude").description("The latitude of the retailerStore"),
+						fieldWithPath("longitude").description("The longitude of the retailerStore"),
+						fieldWithPath("spaces").description("The spaces of the retailerStore"),
+						fieldWithPath("minCars").description("The minCars of the retailerStore"),
+						fieldWithPath("maxCars").description("The maxCars of the retailerStore"),
+						fieldWithPath("mallName").description("The mallName of the retailerStore"),
+						fieldWithPath("mallAddress").description("The mallAddress of the retailerStore"),
+						fieldWithPath("mallRemarks").description("The mallRemarks of the retailerStore"),
+						fieldWithPath("cmbx").description("The cmbx of the retailerStore"),
+						fieldWithPath("grade").description("The grade of the retailerStore"),
+						fieldWithPath("mallOnlyType").description("The mallOnlyType of the retailerStore"),
+						fieldWithPath("mallType").description("The mallType of the retailerStore"),
+						fieldWithPath("comment").description("The comment of the retailerStore"),
+						fieldWithPath("activated").description("The activated of the retailerStore"),
+subsectionWithPath("_links").description("<<resources-retailerStore-links,Links>> to other resources"))));
+}
+
+
+/*
+  Update example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+@Test
+public void retailerStoreUpdateExample() throws Exception {
+
+	Map<String, Object> retailerStores = new HashMap<String, Object>();
+	  retailerStores.put("storeId",1);
+      retailerStores.put("address","Rathmalana");
+      retailerStores.put("zip",2);
+		retailerStores.put("storeNumber",3);
+		retailerStores.put("latitude",0.1);
+		retailerStores.put("longitude",0.2);
+		retailerStores.put("spaces",4);
+		retailerStores.put("minCars",10);
+		retailerStores.put("maxCars",100);
+		retailerStores.put("comment",null);
+		retailerStores.put("mallType",null);
+		retailerStores.put("mallOnlyType",null);
+		retailerStores.put("grade",null);
+		retailerStores.put("mallName","mall");
+		retailerStores.put("mallAddress","mallAddress");
+		retailerStores.put("mallRemarks","mallRemark");
+		retailerStores.put("cmbx",1);
+		retailerStores.put("activated",true);
+
+	String retailerStoreLocation = this.mockMvc
+			.perform(
+					post("/api/retailerStores").contentType(MediaTypes.HAL_JSON).content(
+							this.objectMapper.writeValueAsString(retailerStores)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	this.mockMvc.perform(get(retailerStoreLocation)).andExpect(status().isOk())
+			.andExpect(jsonPath("storeId", is(retailerStores.get("storeId"))))
+			.andExpect(jsonPath("address", is(retailerStores.get("address"))))
+			.andExpect(jsonPath("zip", is(retailerStores.get("zip"))))
+			.andExpect(jsonPath("storeNumber", is(retailerStores.get("storeNumber"))))
+			.andExpect(jsonPath("latitude", is(retailerStores.get("latitude"))))
+			.andExpect(jsonPath("longitude", is(retailerStores.get("longitude"))))
+			.andExpect(jsonPath("spaces", is(retailerStores.get("spaces"))))
+			.andExpect(jsonPath("minCars", is(retailerStores.get("minCars"))))
+			.andExpect(jsonPath("maxCars", is(retailerStores.get("maxCars"))))
+			.andExpect(jsonPath("mallName", is(retailerStores.get("mallName"))))
+			.andExpect(jsonPath("mallAddress", is(retailerStores.get("mallAddress"))))
+			.andExpect(jsonPath("mallRemarks", is(retailerStores.get("mallRemarks"))))
+			.andExpect(jsonPath("cmbx", is(retailerStores.get("cmbx"))))
+			.andExpect(jsonPath("grade", is(retailerStores.get("grade"))))
+			.andExpect(jsonPath("mallOnlyType", is(retailerStores.get("mallOnlyType"))))
+			.andExpect(jsonPath("mallType", is(retailerStores.get("mallType"))))
+			.andExpect(jsonPath("comment", is(retailerStores.get("comment"))))
+			
+			.andExpect(jsonPath("activated", is(retailerStores.get("activated"))))
+			.andExpect(jsonPath("_links.self.href", is(retailerStoreLocation)))
+			.andExpect(jsonPath("_links.city", is(notNullValue())))
+	.andExpect(jsonPath("_links.reit", is(notNullValue())))
+	.andExpect(jsonPath("_links.state", is(notNullValue())))
+	.andExpect(jsonPath("_links.ticker", is(notNullValue())));
+	
+	
+	Map<String, String> ticker = new HashMap<String, String>();
+	ticker.put("name", "REST2");
+
+	String tickerLocation = this.mockMvc
+			.perform(
+			post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(ticker)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	
+	Map<String, String> city = new HashMap<String, String>();
+	city.put("name", "REST2");
+String cityLocation = this.mockMvc
+			.perform(
+			post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(city)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+	
+
+
+Map<String, String> reit = new HashMap<String, String>();
+reit.put("name", "REST2");
+String reitLocation = this.mockMvc
+	.perform(
+	post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+	this.objectMapper.writeValueAsString(reit)))
+	.andExpect(status().isCreated()).andReturn().getResponse()
+	.getHeader("Location");
+	
+	
+	
+	Map<String, String> state = new HashMap<String, String>();
+	state.put("name", "REST2");
+String stateLocation = this.mockMvc
+			.perform(
+			post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+			this.objectMapper.writeValueAsString(state)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+	
+	
+	
+			Map<String, Object> retailerStoresUpdate = new HashMap<String, Object>();
+			retailerStoresUpdate.put("ticker", Arrays.asList(tickerLocation));
+			retailerStoresUpdate.put("city", Arrays.asList(cityLocation));
+			retailerStoresUpdate.put("reit", Arrays.asList(reitLocation));
+			retailerStoresUpdate.put("state", Arrays.asList(stateLocation));
+	this.mockMvc.perform(
+			patch(retailerStoreLocation).contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(retailerStoresUpdate)))
+			.andExpect(status().isNoContent())
+			.andDo(document("retailerStores-update-example",
+					requestFields(
+							
+							fieldWithPath("storeId").description("The storeId of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("address").description("The address of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("zip").description("The zip of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("storeNumber").description("The storeNumber of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("latitude").description("The latitude of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("longitude").description("The longitude of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("spaces").description("The spaces of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("minCars").description("The minCars of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("maxCars").description("The maxCars of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("mallName").description("The mallName of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("mallAddress").description("The mallAddress of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("mallRemarks").description("The mallRemarks of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("cmbx").description("The cmbx of the retailerStore").type(JsonFieldType.NUMBER).optional(),
+							fieldWithPath("grade").description("The grade of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("mallOnlyType").description("The mallOnlyType of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("mallType").description("The mallType of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("comment").description("The comment of the retailerStore").type(JsonFieldType.STRING).optional(),
+							fieldWithPath("activated").description("The activated of the retailerStore").type(JsonFieldType.BOOLEAN).optional(),
+							fieldWithPath("state").description("An object of state resource URIs").optional(),
+	fieldWithPath("reit").description("An object of reit resource URIs").optional(),
+	fieldWithPath("ticker").description("An object of ticker resource URIs").optional(),
+	fieldWithPath("city").description("An object of city resource URIs").optional())));
+							
+					
+}
+
+
+/*
+  =========================City entity==============================
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ 
+
+
+ List City example
+  
+ @author Pubudu Sanadaruwan
+ @throws Exception
+ */
+
+
+@Test
+public void cityListExample() throws Exception {
+	this.cityRepository.deleteAll();
+
+	createCity("Rathmalana");
+	createCity("Dehiwala");
+
+	
+	
+	this.mockMvc.perform(get("/api/cities"))
+		.andExpect(status().isOk())
+		.andDo(document("cities-list-example",
+				links(
+						linkWithRel("self").description("Canonical link for this resource"),
+						linkWithRel("profile").description("The ALPS profile for this resource")),
+				responseFields(
+						subsectionWithPath("_embedded.cities").description("An array of <<resources-cities, City resources>>"),
+						subsectionWithPath("page").description("pagination"),
+						subsectionWithPath("_links").description("<<resources-cities-list-links, Links>> to other resources"))));
+}
+
+private void createCity(String name) {
+	City city=new City();
+	city.setName(name);
+	
+	this.cityRepository.save(city);
+	
+}
+
+
+/*
+  Creating City example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void cityCreateExample() throws Exception {
+	
+		
+			Map<String, Object> cities = new HashMap<String, Object>();
+	
+			cities.put("name", "Galle");
+			            
+	this.mockMvc.perform(
+			post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(cities))).andExpect(
+			status().isCreated())
+			.andDo(document("cities-create-example",
+					requestFields(
+							fieldWithPath("name").description("The name of the cities"))));
+
+}
+
+
+/*
+ Getting City example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+@Test
+public void cityGetExample() throws Exception {
+	Map<String, Object> cities = new HashMap<String, Object>();
+
+cities.put("name", "Mathara");
+
+String cityLocation = this.mockMvc
+.perform(
+		post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(cities)))
+.andExpect(status().isCreated()).andReturn().getResponse()
+.getHeader("Location");
+
+	this.mockMvc.perform(get(cityLocation)).andExpect(status().isOk())
+	.andExpect(jsonPath("name", is(cities.get("name"))))
+	.andExpect(jsonPath("_links.self.href", is(cityLocation)))
+		.andDo(print())
+		.andDo(document("cities-get-example",
+				links(
+						linkWithRel("self").description("Canonical link for this <<resources-city,city>>"),
+						linkWithRel("city").description("This <<resources-city,city>>")),
+						responseFields(
+						fieldWithPath("name").description("The name of the city"),
+						subsectionWithPath("_links").description("<<resources-city-links,Links>> to other resources"))));
+}
+
+
+
+
+
+/*
+ update City example
+  
+ @author Pubudu Sanadaruwan
+ @throws Exception
+ */
+
+
+
+@Test
+public void cityUpdateExample() throws Exception {
+
+	Map<String, Object> cities = new HashMap<String, Object>();
+	  cities.put("name","Hambanthota");
+     
+	String cityLocation = this.mockMvc
+			.perform(
+					post("/api/cities").contentType(MediaTypes.HAL_JSON).content(
+							this.objectMapper.writeValueAsString(cities)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	this.mockMvc.perform(get(cityLocation)).andExpect(status().isOk())
+			.andExpect(jsonPath("name", is(cities.get("name"))))
+			.andExpect(jsonPath("_links.self.href", is(cityLocation)));
+
+			
+	this.mockMvc.perform(
+			patch(cityLocation).contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(cities)))
+			.andExpect(status().isNoContent())
+			.andDo(document("cities-update-example",
+					requestFields(
+							
+							fieldWithPath("name").description("The name of the city").type(JsonFieldType.STRING).optional())));
+							
+}
+/*
+
+
+
+
+
+/*
+  =========================Reit entity==============================
+  
+ @author Pubudu Sanadaruwan
+  @throws Exception
+ 
+
+
+  List Reit example
+  
+ @author Pubudu Sanadaruwan
+ @throws Exception
+ */
+
+
+@Test
+public void reitListExample() throws Exception {
+	this.reitRepository.deleteAll();
+
+	createReit("Jafna");
+	createReit("Trinco");
+
+	
+	
+	this.mockMvc.perform(get("/api/reits"))
+		.andExpect(status().isOk())
+		.andDo(document("reits-list-example",
+				links(
+						linkWithRel("self").description("Canonical link for this resource"),
+						linkWithRel("profile").description("The ALPS profile for this resource")),
+				responseFields(
+						subsectionWithPath("_embedded.reits").description("An array of <<resources-reits, Reit resources>>"),
+						subsectionWithPath("page").description("pagination"),
+						subsectionWithPath("_links").description("<<resources-reits-list-links, Links>> to other resources"))));
+}
+
+private void createReit(String name) {
+	Reit reit=new Reit();
+	reit.setName(name);
+	
+	this.reitRepository.save(reit);
+	
+}
+
+
+/*
+  Creating Reit example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void reitCreateExample() throws Exception {
+	
+		
+			Map<String, Object> reits = new HashMap<String, Object>();
+	
+			reits.put("name", "kagalle");
+			            
+	this.mockMvc.perform(
+			post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(reits))).andExpect(
+			status().isCreated())
+			.andDo(document("reits-create-example",
+					requestFields(
+							fieldWithPath("name").description("The name of the reits"))));
+
+}
+
+/*
+
+ Getting Reit example
+ 
+ @author Pubudu Sanadaruwan
+ @throws Exception
+ */
+
+
+@Test
+public void reitGetExample() throws Exception {
+	Map<String, Object> reits = new HashMap<String, Object>();
+
+	reits.put("name", "Thangalle");
+
+String reitLocation = this.mockMvc
+.perform(
+		post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(reits)))
+.andExpect(status().isCreated()).andReturn().getResponse()
+.getHeader("Location");
+
+	this.mockMvc.perform(get(reitLocation)).andExpect(status().isOk())
+	.andExpect(jsonPath("name", is(reits.get("name"))))
+	.andExpect(jsonPath("_links.self.href", is(reitLocation)))
+		.andDo(print())
+		.andDo(document("reits-get-example",
+				links(
+						linkWithRel("self").description("Canonical link for this <<resources-reit,reit>>"),
+						linkWithRel("reit").description("This <<resources-reit,reit>>")),
+						responseFields(
+						fieldWithPath("name").description("The name of the reit"),
+						subsectionWithPath("_links").description("<<resources-reit-links,Links>> to other resources"))));
+}
+
+
+
+
+
+/*
+  update Reit example
+ 
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void reitUpdateExample() throws Exception {
+
+	Map<String, Object> reits = new HashMap<String, Object>();
+	reits.put("name","mt.Lavinia");
+     
+	String reitLocation = this.mockMvc
+			.perform(
+					post("/api/reits").contentType(MediaTypes.HAL_JSON).content(
+							this.objectMapper.writeValueAsString(reits)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	this.mockMvc.perform(get(reitLocation)).andExpect(status().isOk())
+			.andExpect(jsonPath("name", is(reits.get("name"))))
+			.andExpect(jsonPath("_links.self.href", is(reitLocation)));
+
+			
+	this.mockMvc.perform(
+			patch(reitLocation).contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(reits)))
+			.andExpect(status().isNoContent())
+			.andDo(document("reits-update-example",
+					requestFields(
+							
+							fieldWithPath("name").description("The name of the reit").type(JsonFieldType.STRING).optional())));
+							
+}
+
+
+
+/* 
+=========================Ticker entity==============================
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ 
+
+
+ List Ticker example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+@Test
+public void tickerListExample() throws Exception {
+	this.tickerRepository.deleteAll();
+
+	createTicker("panadura");
+	createTicker("moratuwa");
+
+	
+	
+	this.mockMvc.perform(get("/api/tickers"))
+		.andExpect(status().isOk())
+		.andDo(document("tickers-list-example",
+				links(
+						linkWithRel("self").description("Canonical link for this resource"),
+						linkWithRel("profile").description("The ALPS profile for this resource")),
+				responseFields(
+						subsectionWithPath("_embedded.tickers").description("An array of <<resources-tickers, Ticker resources>>"),
+						subsectionWithPath("page").description("pagination"),
+						subsectionWithPath("_links").description("<<resources-tickers-list-links, Links>> to other resources"))));
+}
+
+private void createTicker(String name) {
+	Ticker ticker=new Ticker();
+	ticker.setName(name);
+	
+	this.tickerRepository.save(ticker);
+	
+}
+
+
+/*
+  Creating Ticker example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void tickerCreateExample() throws Exception {
+	
+		
+			Map<String, Object> tickers = new HashMap<String, Object>();
+	
+			tickers.put("name", "thunmulle");
+			            
+	this.mockMvc.perform(
+			post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(tickers))).andExpect(
+			status().isCreated())
+			.andDo(document("tickers-create-example",
+					requestFields(
+							fieldWithPath("name").description("The name of the tickers"))));
+
+}
+
+
+/*
+  Getting Ticker example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+@Test
+public void tickerGetExample() throws Exception {
+	Map<String, Object> tickers = new HashMap<String, Object>();
+
+	tickers.put("name", "mathugama");
+
+String tickerLocation = this.mockMvc
+.perform(
+		post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(tickers)))
+.andExpect(status().isCreated()).andReturn().getResponse()
+.getHeader("Location");
+
+	this.mockMvc.perform(get(tickerLocation)).andExpect(status().isOk())
+	.andExpect(jsonPath("name", is(tickers.get("name"))))
+	.andExpect(jsonPath("_links.self.href", is(tickerLocation)))
+		.andDo(print())
+		.andDo(document("tickers-get-example",
+				links(
+						linkWithRel("self").description("Canonical link for this <<resources-ticker,ticker>>"),
+						linkWithRel("ticker").description("This <<resources-ticker,ticker>>")),
+						responseFields(
+						fieldWithPath("name").description("The name of the ticker"),
+						subsectionWithPath("_links").description("<<resources-ticker-links,Links>> to other resources"))));
+}
+
+
+
+
+/*
+  update Ticker example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void tickerUpdateExample() throws Exception {
+
+	Map<String, Object> tickers = new HashMap<String, Object>();
+	tickers.put("name","maxxa");
+     
+	String tickerLocation = this.mockMvc
+			.perform(
+					post("/api/tickers").contentType(MediaTypes.HAL_JSON).content(
+							this.objectMapper.writeValueAsString(tickers)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	this.mockMvc.perform(get(tickerLocation)).andExpect(status().isOk())
+			.andExpect(jsonPath("name", is(tickers.get("name"))))
+			.andExpect(jsonPath("_links.self.href", is(tickerLocation)));
+
+			
+	this.mockMvc.perform(
+			patch(tickerLocation).contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(tickers)))
+			.andExpect(status().isNoContent())
+			.andDo(document("tickers-update-example",
+					requestFields(
+							
+							fieldWithPath("name").description("The name of the ticker").type(JsonFieldType.STRING).optional())));
+							
+}
+
+
+
+
+
+
+
+/*
+  =========================State entity==============================
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ 
+
+
+  List State example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+@Test
+public void stateListExample() throws Exception {
+	this.stateRepository.deleteAll();
+
+	createState("aasds","aaaa");
+	createState("yyyyy","wwwww");
+
+	
+	
+	this.mockMvc.perform(get("/api/states"))
+		.andExpect(status().isOk())
+		.andDo(document("states-list-example",
+				links(
+						linkWithRel("self").description("Canonical link for this resource"),
+						linkWithRel("profile").description("The ALPS profile for this resource")),
+				responseFields(
+						subsectionWithPath("_embedded.states").description("An array of <<resources-states, Ticker resources>>"),
+						subsectionWithPath("page").description("pagination"),
+						subsectionWithPath("_links").description("<<resources-states-list-links, Links>> to other resources"))));
+}
+
+private void createState(String name,String abbr) {
+	State state=new State();
+	state.setName(name);
+	state.setAbbr(abbr);
+	
+	this.stateRepository.save(state);
+	
+}
+
+
+/*
+  Creating State example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+
+@Test
+public void stateCreateExample() throws Exception {
+	
+		
+			Map<String, Object> states = new HashMap<String, Object>();
+	
+			states.put("name", "zzzzzz");
+			states.put("abbr", "xxxxx");
+			
+			            
+	this.mockMvc.perform(
+			post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(states))).andExpect(
+			status().isCreated())
+			.andDo(document("states-create-example",
+					requestFields(
+							fieldWithPath("name").description("The name of the states"),
+					fieldWithPath("abbr").description("The abbr of the states"))));
+
+}
+
+
+/*
+  Getting State example
+  
+  @author Pubudu Sanadaruwan
+  @throws Exception
+ */
+
+
+@Test
+public void stateGetExample() throws Exception {
+	Map<String, Object> states = new HashMap<String, Object>();
+
+	states.put("name", "mathugamaaaaaa");
+	states.put("abbr", "cccccccc");
+
+String stateLocation = this.mockMvc
+.perform(
+		post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+				this.objectMapper.writeValueAsString(states)))
+.andExpect(status().isCreated()).andReturn().getResponse()
+.getHeader("Location");
+
+	this.mockMvc.perform(get(stateLocation)).andExpect(status().isOk())
+	.andExpect(jsonPath("name", is(states.get("name"))))
+	.andExpect(jsonPath("abbr", is(states.get("abbr"))))
+	.andExpect(jsonPath("_links.self.href", is(stateLocation)))
+		.andDo(print())
+		.andDo(document("states-get-example",
+				links(
+						linkWithRel("self").description("Canonical link for this <<resources-state,state>>"),
+						linkWithRel("state").description("This <<resources-state,state>>")),
+						responseFields(
+						fieldWithPath("name").description("The name of the state"),
+						fieldWithPath("abbr").description("The abbr of the state"),
+						subsectionWithPath("_links").description("<<resources-state-links,Links>> to other resources"))));
+}
+
+
+
+
+/*
+  update State example
+  
+  @author Pubudu Sanadaruwan
+ @throws Exception
+ */
+
+
+
+@Test
+public void stateUpdateExample() throws Exception {
+
+	Map<String, Object> states = new HashMap<String, Object>();
+	states.put("name","mmmmmmm");
+	states.put("abbr","okkkkk"); 
+	String stateLocation = this.mockMvc
+			.perform(
+					post("/api/states").contentType(MediaTypes.HAL_JSON).content(
+							this.objectMapper.writeValueAsString(states)))
+			.andExpect(status().isCreated()).andReturn().getResponse()
+			.getHeader("Location");
+
+	this.mockMvc.perform(get(stateLocation)).andExpect(status().isOk())
+			.andExpect(jsonPath("name", is(states.get("name"))))
+			.andExpect(jsonPath("abbr", is(states.get("abbr"))))
+			.andExpect(jsonPath("_links.self.href", is(stateLocation)));
+
+			
+	this.mockMvc.perform(
+			patch(stateLocation).contentType(MediaTypes.HAL_JSON).content(
+					this.objectMapper.writeValueAsString(states)))
+			.andExpect(status().isNoContent())
+			.andDo(document("states-update-example",
+					requestFields(
+							
+							fieldWithPath("name").description("The name of the state").type(JsonFieldType.STRING).optional(),
+	fieldWithPath("abbr").description("The abbr of the state").type(JsonFieldType.STRING).optional())));
+	
+}
+
+		
+
+}

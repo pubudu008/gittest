@@ -1,0 +1,19 @@
+server:
+  port: 8081
+spring:
+  profiles:
+    active:
+    - prod
+  datasource:
+    url: jdbc:mysql://localhost/care?useSSL=false
+    username: root
+    password: password
+    validation-query: SELECT 1  
+    test-on-borrow: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.MySQL5Dialect
+liquibase: 
+  enabled: true
+  change-log: classpath:/db/changelog/db.changelog-master.json

@@ -1,0 +1,79 @@
+<h1>hello world</h1>
+<a [routerLink]="['user']">home</a>
+<a [routerLink]="['other']">other</a>
+<hr>
+<!-- <table mdSort (mdSortChange)="sortData($event)">
+        <tr>
+          <th md-sort-header="name">All Data</th>
+        </tr>
+      
+        <tr *ngFor="let course of courses">
+          <td><input type="text" placeholder="NAME" value="{{course.name}}"></td>
+          <td><input type="text" placeholder="NAME" value="{{course.description}}"></td>
+        </tr>
+      </table> -->
+      <md-grid-list cols="2" rowHeight="2:1">
+          <md-grid-tile>
+<div class="example-container mat-elevation-z8">
+  <md-table #table [dataSource]="dataSource">
+
+    <!--- Note that these columns can be defined in any order.
+                    The actual rendered columns are set as a property on the row definition" -->
+
+    <!-- Position Column -->
+    <!-- <ng-container mdColumnDef="id">
+                    <md-header-cell *mdHeaderCellDef> id </md-header-cell>
+                    <md-cell *mdCellDef="let element"> {{element.id}} </md-cell>
+                  </ng-container> -->
+    <ng-container mdColumnDef="name">
+      <md-header-cell *mdHeaderCellDef> name </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.name}} </md-cell>
+    </ng-container>
+
+    <!-- Name Column -->
+    <ng-container mdColumnDef="description">
+      <md-header-cell *mdHeaderCellDef> description </md-header-cell>
+      <md-cell *mdCellDef="let element"> {{element.description}} </md-cell>
+    </ng-container>
+
+
+    <md-header-row *mdHeaderRowDef="displayedColumns"></md-header-row>
+    <md-row (click)="onRowClick(row)" *mdRowDef="let row; columns: displayedColumns;"></md-row>
+  </md-table>
+</div>
+          </md-grid-tile>
+<!-- <label for="id">id</label>
+<input type="text" id="infot" #infot>
+<label for="username">username</label>
+<input type="text" id="user" #user>
+<label for="description">description</label>
+<input type="text" id="dis" #dis>
+<button (click)="onSave(infot.value,user.value,dis.value)">save</button> -->
+<md-grid-tile>
+<form class="example-form">
+    <div class="input-group">
+  <md-form-field class="example-full-width">
+    <!-- <input type="text" [(ngModel)]="course.id">
+        <input type="text" [(ngModel)]="course.name">
+        <input type="text" [(ngModel)]="course.discription">
+        <button (click)="onSave()">save</button> -->
+    <input type="text" placeholder="ID" mdInput [(ngModel)]="course.id" [ngModelOptions]="{standalone: true}">
+    <input type="hidden" [(ngModel)]="course.url" [ngModelOptions]="{standalone: true}">
+  </md-form-field></div>
+  <div class="input-group">
+  <md-form-field class="example-full-width">
+    <input type="text" placeholder="NAME" mdInput [(ngModel)]="course.name" [ngModelOptions]="{standalone: true}">
+  </md-form-field></div>
+  <div class="input-group">
+  <md-form-field class="example-full-width">
+    <input type="text" placeholder="DESCRIPTION" mdInput [(ngModel)]="course.description" [ngModelOptions]="{standalone: true}">
+  </md-form-field>
+  </div>
+  <button md-raised-button (click)="onSave()" color="primary">save</button>
+  <button md-raised-button (click)="onClear()" color="accent">clear</button>
+  <button md-raised-button (click)="onDelete()" color="warn">delete</button>
+  <!-- <button md-raised-button (click)="onUpdate(url.value,name.value,description.value)" color="primary">Update</button> -->
+
+</form></md-grid-tile>
+      </md-grid-list>
+<router-outlet></router-outlet>

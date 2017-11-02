@@ -1,0 +1,466 @@
+= RESTful Mall API Guide
+Pubudu Sandaruwan;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+:operation-curl-request-title: Example request
+:operation-http-response-title: Example response
+
+[[overview]]
+= Overview
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+RESTful retailerStores tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP verbs.
+
+|===
+| Verb | Usage
+
+| `GET`
+| Used to retrieve a resource
+
+| `POST`
+| Used to create a new resource
+
+| `PATCH`
+| Used to update an existing resource, including partial updates
+
+| `DELETE`
+| Used to delete an existing resource
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+RESTful retailerStores tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP status codes.
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| The request completed successfully
+
+| `201 Created`
+| A new resource has been created successfully. The resource's URI is available from the response's
+`Location` header
+
+| `204 No Content`
+| An update to an existing resource has been applied successfully
+
+| `400 Bad Request`
+| The request was malformed. The response body will include an error providing further information
+
+| `404 Not Found`
+| The requested resource did not exist
+|===
+
+[[overview-errors]]
+== Errors
+
+Whenever an error response (status code >= 400) is returned, the body will contain a JSON object
+that describes the problem. The error object has the following structure:
+
+include::{snippets}/error-example/response-fields.adoc[]
+
+For example, a request that attempts to apply a non-existent employee to a retailerStore will produce a
+`400 Bad Request` response:
+
+include::{snippets}/error-example/http-response.adoc[]
+
+[[overview-hypermedia]]
+== Hypermedia
+
+RESTful retailerStores uses hypermedia and resources include links to other resources in their
+responses. Responses are in http://stateless.co/hal_specification.html[Hypertext Application
+from resource to resource.
+Language (HAL)] format. Links can be found beneath the `_links` key. Users of the API should
+not create URIs themselves, instead they should use the above-described links to navigate
+
+[[resources]]
+= Resources
+
+
+
+[[resources-index]]
+== Index
+
+The index provides the entry point into the service.
+
+
+
+[[resources-index-access]]
+=== Accessing the index
+
+A `GET` request is used to access the index
+
+operation::index-example[snippets='response-fields,http-response,links']
+
+
+
+[[resources-retailerStores]]
+== RetailerStores
+
+The retailerStores resources is used to create and list retailerStores
+
+
+
+[[resources-retailerStores-list]]
+=== Listing retailerStores
+
+A `GET` request will list all of the service's retailerStores.
+
+operation::retailerStores-list-example[snippets='response-fields,curl-request,http-response,links']
+
+
+
+[[resources-retailerStores-create]]
+=== Creating a retailerStore
+
+A `POST` request is used to create a retailerStore.
+
+operation::retailerStores-create-example[snippets='request-fields,curl-request,http-response']
+
+
+
+[[resources-retailerStore]]
+== RetailerStore
+
+The RetailerStore resource is used to retrieve, update, and delete individual retailerStores
+
+
+
+[[resources-retailerStore-links]]
+=== Links
+
+include::{snippets}/retailerStores-get-example/links.adoc[]
+
+
+
+[[resources-retailerStore-retrieve]]
+=== Retrieve a retailerStore
+
+A `GET` request will retrieve the details of a retailerStore
+
+operation::retailerStores-get-example[snippets='response-fields,curl-request,http-response']
+
+
+
+[[resources-retailerStore-update]]
+=== Update a retailerStore
+
+A `PATCH` request is used to update a retailerStore
+
+==== Request structure
+
+include::{snippets}/retailerStores-update-example/request-fields.adoc[]
+
+To leave an attribute of a note unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/retailerStores-update-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/retailerStores-update-example/http-response.adoc[]
+
+
+
+
+
+
+
+
+[[resources-Cities]]
+== Cities
+
+The cities resources is used to create and list cities
+
+
+
+[[resources-cities-list]]
+=== Listing cities
+
+A `GET` request will list all of the service's cities.
+
+operation::cities-list-example[snippets='response-fields,curl-request,http-response,links']
+
+
+
+[[resources-cities-create]]
+=== Creating a City
+
+A `POST` request is used to create a City.
+
+operation::cities-create-example[snippets='request-fields,curl-request,http-response']
+
+
+
+[[resources-City]]
+== City
+
+The RetailerStore resource is used to retrieve, update, and delete individual cities
+
+
+
+[[resources-City-links]]
+=== Links
+
+include::{snippets}/cities-get-example/links.adoc[]
+
+
+
+[[resources-City-retrieve]]
+=== Retrieve a City
+
+A `GET` request will retrieve the details of a City
+
+operation::cities-get-example[snippets='response-fields,curl-request,http-response']
+
+
+
+[[resources-City-update]]
+=== Update a City
+
+A `PATCH` request is used to update a City
+
+==== Request structure
+
+include::{snippets}/cities-update-example/request-fields.adoc[]
+
+To leave an attribute of a note unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/cities-update-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/cities-update-example/http-response.adoc[]
+
+
+
+
+
+
+
+
+[[resources-reits]]
+== Reits
+
+The reits resources is used to create and list reits
+
+
+
+[[resources-reits-list]]
+=== Listing reits
+
+A `GET` request will list all of the service's reits.
+
+operation::reits-list-example[snippets='response-fields,curl-request,http-response,links']
+
+
+
+[[resources-reits-create]]
+=== Creating a Reit
+
+A `POST` request is used to create a Reit.
+
+operation::reits-create-example[snippets='request-fields,curl-request,http-response']
+
+
+
+[[resources-Reit]]
+== Reit
+
+The RetailerStore resource is used to retrieve, update, and delete individual reits
+
+
+
+[[resources-Reit-links]]
+=== Links
+
+include::{snippets}/reits-get-example/links.adoc[]
+
+
+
+[[resources-Reit-retrieve]]
+=== Retrieve a Reit
+
+A `GET` request will retrieve the details of a Reit
+
+operation::reits-get-example[snippets='response-fields,curl-request,http-response']
+
+
+
+[[resources-Reit-update]]
+=== Update a Reit
+
+A `PATCH` request is used to update a Reit
+
+==== Request structure
+
+include::{snippets}/reits-update-example/request-fields.adoc[]
+
+To leave an attribute of a note unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/reits-update-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/reits-update-example/http-response.adoc[]
+
+
+
+
+
+
+
+[[resources-States]]
+== States
+
+The states resources is used to create and list states
+
+
+
+[[resources-states-list]]
+=== Listing states
+
+A `GET` request will list all of the service's states.
+
+operation::states-list-example[snippets='response-fields,curl-request,http-response,links']
+
+
+
+[[resources-states-create]]
+=== Creating a State
+
+A `POST` request is used to create a State.
+
+operation::states-create-example[snippets='request-fields,curl-request,http-response']
+
+
+
+[[resources-State]]
+== State
+
+The RetailerStore resource is used to retrieve, update, and delete individual states
+
+
+
+[[resources-State-links]]
+=== Links
+
+include::{snippets}/states-get-example/links.adoc[]
+
+
+
+[[resources-State-retrieve]]
+=== Retrieve a State
+
+A `GET` request will retrieve the details of a State
+
+operation::states-get-example[snippets='response-fields,curl-request,http-response']
+
+
+
+[[resources-State-update]]
+=== Update a State
+
+A `PATCH` request is used to update a State
+
+==== Request structure
+
+include::{snippets}/states-update-example/request-fields.adoc[]
+
+To leave an attribute of a note unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/states-update-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/states-update-example/http-response.adoc[]
+
+
+
+
+
+
+
+
+[[resources-Tickers]]
+== Tickers
+
+The tickers resources is used to create and list tickers
+
+
+
+[[resources-tickers-list]]
+=== Listing tickers
+
+A `GET` request will list all of the service's tickers.
+
+operation::tickers-list-example[snippets='response-fields,curl-request,http-response,links']
+
+
+
+[[resources-tickers-create]]
+=== Creating a Ticker
+
+A `POST` request is used to create a Ticker.
+
+operation::tickers-create-example[snippets='request-fields,curl-request,http-response']
+
+
+
+[[resources-Ticker]]
+== Ticker
+
+The RetailerStore resource is used to retrieve, update, and delete individual tickers
+
+
+
+[[resources-Ticker-links]]
+=== Links
+
+include::{snippets}/tickers-get-example/links.adoc[]
+
+
+
+[[resources-Ticker-retrieve]]
+=== Retrieve a Ticker
+
+A `GET` request will retrieve the details of a Ticker
+
+operation::tickers-get-example[snippets='response-fields,curl-request,http-response']
+
+
+
+[[resources-Ticker-update]]
+=== Update a Ticker
+
+A `PATCH` request is used to update a Ticker
+
+==== Request structure
+
+include::{snippets}/tickers-update-example/request-fields.adoc[]
+
+To leave an attribute of a note unchanged, any of the above may be omitted from the request.
+
+==== Example request
+
+include::{snippets}/tickers-update-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/tickers-update-example/http-response.adoc[]
